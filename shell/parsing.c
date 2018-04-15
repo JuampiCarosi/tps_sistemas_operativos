@@ -82,7 +82,11 @@ static bool parse_environ_var(struct execcmd* c, char* arg) {
 	return false;
 }
 
-// expand environment variables
+// this function will be called for every token, and it should
+// expand environment variables. In other words, if the token
+// happens to start with '$', the correct substitution with the
+// environment value should be performed. Otherwise the same
+// token is returned.
 //
 // Hints:
 // - check if the first byte of the argument
