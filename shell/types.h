@@ -6,7 +6,7 @@
 /*
  cmd: Generic interface
 	that represents a single command.
-	All the others *cmd structs can be
+	All the other *cmd structs can be
 	casted to it, and they don´t lose
 	information (for example the 'type' field).
 
@@ -70,7 +70,7 @@ struct pipecmd {
 	plus one more field containing the command to be executed.
 	Take a look to the parsing.c file to understand it better.
 	Again, this extra field, can have type either EXEC or REDIR
-	depending on if the to process to be executed in the background
+	depending on if the process to be executed in the background
 	contains redirection symbols.
 */
 struct backcmd {
