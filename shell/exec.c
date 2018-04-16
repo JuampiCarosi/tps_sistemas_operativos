@@ -47,6 +47,7 @@ static void set_environ_vars(char** eargv, int eargc) {
 static int open_redir_fd(char* file) {
 
 	// Your code here
+	return -1;
 }
 
 // executes a command - does not return
