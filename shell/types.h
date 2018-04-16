@@ -28,6 +28,7 @@ struct cmd {
 	- argc: arguments quantity after parsed
 	- eargc: environ vars quantity after parsed
 	- argv: array of strings representig the arguments
+		of the form: {"binary/command", "arg0", "arg1", ... , (char*)NULL}
 	- eargv: array of strings of the form: "KEY=VALUE" 
 		representing the environ vars
 	- *_file: string that contains the name of the file
