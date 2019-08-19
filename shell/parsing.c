@@ -91,8 +91,12 @@ static bool parse_environ_var(struct execcmd* c, char* arg) {
 // Hints:
 // - check if the first byte of the argument
 // 	contains the '$'
-// - expand it and copy the value
-// 	 to 'arg' 
+// - expand it and copy the value in 'arg'
+// - remember to check the size of variable's value
+// 	(It could be greater than the current
+// 	size of 'arg'). If that's the case,
+// 	you should realloc 'arg' to the new
+// 	size.
 static char* expand_environ_var(char* arg) {
 
 	// Your code here

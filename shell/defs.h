@@ -28,7 +28,7 @@
 #define PRMTLEN 1024
 #define MAXARGS 20
 #define ARGSIZE 1024
-#define FNAMESIZE 200
+#define FNAMESIZE 1024
 
 // Command representation after parsed
 #define EXEC 1

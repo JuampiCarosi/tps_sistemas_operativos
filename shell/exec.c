@@ -22,7 +22,7 @@ static void get_environ_value(char* arg, char* value, int idx) {
 	value[j] = END_STRING;
 }
 
-// sets the environment variables passed
+// sets the environment variables received
 // in the command line
 //
 // Hints:
@@ -55,7 +55,14 @@ static int open_redir_fd(char* file, int flags) {
 // Hint:
 // - check how the 'cmd' structs are defined
 // 	in types.h
+// - casting could be a good option
 void exec_cmd(struct cmd* cmd) {
+
+	// To be used in the different cases
+	struct execcmd* e;
+	struct backcmd* b;
+	struct execcmd* r;
+	struct pipecmd* p;
 
 	switch (cmd->type) {
 
