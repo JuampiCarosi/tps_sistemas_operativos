@@ -6,7 +6,7 @@ struct cmd* exec_cmd_create(char* buf_cmd) {
 
 	struct execcmd* e;
 	
-	e = (struct execcmd*)calloc(sizeof(*e), sizeof(*e));
+	e = (struct execcmd*)calloc(1, sizeof(*e));
 
 	e->type = EXEC;
 	strcpy(e->scmd, buf_cmd);
@@ -20,7 +20,7 @@ struct cmd* back_cmd_create(struct cmd* c) {
 
 	struct backcmd* b;
 
-	b = (struct backcmd*)calloc(sizeof(*b), sizeof(*b));
+	b = (struct backcmd*)calloc(1, sizeof(*b));
 	
 	b->type = BACK;
 	strcpy(b->scmd, c->scmd);
@@ -37,7 +37,7 @@ struct cmd* pipe_cmd_create(struct cmd* left, struct cmd* right) {
 	
 	struct pipecmd* p;
 
-	p = (struct pipecmd*)calloc(sizeof(*p), sizeof(*p));
+	p = (struct pipecmd*)calloc(1, sizeof(*p));
 	
 	p->type = PIPE;
 	p->leftcmd = left;
