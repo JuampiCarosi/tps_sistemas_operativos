@@ -1,28 +1,21 @@
-CFLAGS := -std=c99 -g -Wall
-CC := gcc
-EXEC = sh
-BIN = $(filter-out $(EXEC).c, $(wildcard *.c))
-BINFILES = $(BIN:.c=.o)
-OBJDIR = build
+CFLAGS := -ggdb3 -O2 -Wall -Wextra -std=gnu11
+CFLAGS += -Wmissing-prototypes
 
-$(OBJDIR)/%.o: %.c %.h
-	@mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+EXEC := sh
+SRCS := $(wildcard *.c)
+OBJS := $(SRCS:%.c=%.o)
 
-OBJEXEC = $(addprefix $(OBJDIR)/, $(EXEC))
+all: $(EXEC)
 
-all: $(OBJEXEC)
+run: $(EXEC)
+	./$(EXEC)
 
-$(OBJEXEC): $(addprefix $(OBJDIR)/, $(BINFILES)) $(EXEC).c
-	$(CC) $(CFLAGS) $^ -o $@
+valgrind: $(EXEC)
+	valgrind --leak-check=full --show-leak-kinds=all ./$(EXEC)
 
-run: all
-	./$(OBJDIR)/$(EXEC)
-
-valgrind: all
-	valgrind --leak-check=full --show-leak-kinds=all ./$(OBJDIR)/$(EXEC)
+$(EXEC): $(OBJS)
 
 clean:
-	rm -rf $(OBJDIR)/ *.o *.asm
+	rm -rf $(EXEC) *.o core vgcore.*
 
-.PHONY: clean run
+.PHONY: all clean run valgrind

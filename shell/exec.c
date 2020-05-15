@@ -15,7 +15,7 @@ static void get_environ_key(char* arg, char* key) {
 // the "arg" argument and null-terminates it
 static void get_environ_value(char* arg, char* value, int idx) {
 
-	int i, j;
+	size_t i, j;
 	for (i = (idx + 1), j = 0; i < strlen(arg); i++, j++)
 		value[j] = arg[i];
 

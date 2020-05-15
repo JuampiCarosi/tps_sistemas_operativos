@@ -23,7 +23,7 @@ char* split_line(char* buf, char splitter) {
 // in other case
 int block_contains(char* buf, char c) {
 
-	for (int i = 0; i < strlen(buf); i++)
+	for (size_t i = 0; i < strlen(buf); i++)
 		if (buf[i] == c)
 			return i;
 	
