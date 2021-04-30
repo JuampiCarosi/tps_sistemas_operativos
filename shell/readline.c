@@ -5,7 +5,8 @@ static char buffer[BUFLEN];
 
 // read a line from the standar input
 // and prints the prompt
-char* read_line(const char* promt) {
+char*
+read_line(const char* promt) {
 
 	int i = 0,
 	    c = 0;
@@ -14,14 +15,14 @@ char* read_line(const char* promt) {
 	fprintf(stdout, "%s", "$ ");
 
 	memset(buffer, 0, BUFLEN);
-	
+
 	c = getchar();
 
 	while (c != END_LINE && c != EOF) {
 		buffer[i++] = c;
 		c = getchar();
 	}
-		
+
 	// if the user press ctrl+D
 	// just exit normally
 	if (c == EOF)

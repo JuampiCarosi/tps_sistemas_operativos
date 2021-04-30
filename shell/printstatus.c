@@ -1,12 +1,13 @@
 #include "printstatus.h"
 
 // prints information of process' status
-void print_status_info(struct cmd* cmd) {
+void
+print_status_info(struct cmd* cmd) {
 
 	if (strlen(cmd->scmd) == 0
 		|| cmd->type == PIPE)
 		return;
-	
+
 	if (WIFEXITED(status)) {
 
 		fprintf(stdout, "%s	Program: [%s] exited, status: %d %s\n",
@@ -28,7 +29,8 @@ void print_status_info(struct cmd* cmd) {
 }
 
 // prints info when a background process is spawned
-void print_back_info(struct cmd* back) {
+void
+print_back_info(struct cmd* back) {
 
 	fprintf(stdout, "%s  [PID=%d] %s\n",
 		COLOR_BLUE, back->pid, COLOR_RESET);

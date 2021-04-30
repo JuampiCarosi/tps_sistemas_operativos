@@ -55,8 +55,6 @@ struct execcmd {
   pipecmd: It contains the same information as 'cmd'
 	plus two fields representing the left and right part
 	of a command of the form: "command1 arg1 arg2 | command2 arg3"
-	As they are of type 'struct cmd',
-	it means that they can be either an EXEC or a REDIR command.
 */
 struct pipecmd {
 	int type;

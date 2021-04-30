@@ -6,7 +6,8 @@
 char promt[PRMTLEN] = {0};
 
 // runs a shell command
-static void run_shell() {
+static void
+run_shell() {
 
 	char* cmd;
 
@@ -17,7 +18,8 @@ static void run_shell() {
 
 // initialize the shell
 // with the "HOME" directory
-static void init_shell() {
+static void
+init_shell() {
 
 	char buf[BUFLEN] = {0};
 	char* home = getenv("HOME");

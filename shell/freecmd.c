@@ -2,7 +2,8 @@
 
 // frees the memory allocated 
 // for the tree structure command
-void free_command(struct cmd* cmd) {
+void
+free_command(struct cmd* cmd) {
 
 	int i;
 	struct pipecmd* p;
@@ -10,18 +11,18 @@ void free_command(struct cmd* cmd) {
 	struct backcmd* b;
 
 	if (cmd->type == PIPE) {
-		
+
 		p = (struct pipecmd*)cmd;
-		
+
 		free_command(p->leftcmd);
 		free_command(p->rightcmd);
-		
+
 		free(p);
 		return;
 	}
 
 	if (cmd->type == BACK) {
-		
+
 		b = (struct backcmd*)cmd;
 
 		free_command(b->c);
