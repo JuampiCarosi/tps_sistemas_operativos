@@ -4,8 +4,9 @@ int status = 0;
 struct cmd* parsed_pipe;
 
 // runs the command in 'cmd'
-int run_cmd(char* cmd) {
-	
+int
+run_cmd(char* cmd) {
+
 	pid_t p;
 	struct cmd *parsed;
 
@@ -14,24 +15,24 @@ int run_cmd(char* cmd) {
 	if (cmd[0] == END_STRING)
 		return 0;
 
-	// cd built-in call
+	// "cd" built-in call
 	if (cd(cmd))
 		return 0;
 
-	// exit built-in call
+	// "exit" built-in call
 	if (exit_shell(cmd))
 		return EXIT_SHELL;
 
-	// pwd buil-in call
+	// "pwd" buil-in call
 	if (pwd(cmd))
 		return 0;
 
 	// parses the command line
 	parsed = parse_line(cmd);
-	
+
 	// forks and run the command
 	if ((p = fork()) == 0) {
-		
+
 		// keep a reference
 		// to the parsed pipe cmd
 		// so it can be freed later
@@ -55,9 +56,9 @@ int run_cmd(char* cmd) {
 
 	// waits for the process to finish
 	waitpid(p, &status, 0);
-	
+
 	print_status_info(parsed);
-	
+
 	free_command(parsed);
 
 	return 0;
