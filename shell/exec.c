@@ -6,6 +6,7 @@
 // Example:
 //  - KEY=value
 //  arg = ['K', 'E', 'Y', '=', 'v', 'a', 'l', 'u', 'e', '\0']
+//  key = "KEY"
 //
 static void
 get_environ_key(char* arg, char* key) {
@@ -19,10 +20,13 @@ get_environ_key(char* arg, char* key) {
 
 // sets "value" with the value part of "arg"
 // and null-terminates it
+// "idx" should be the index in "arg" where "=" char
+// resides
 //
 // Example:
 //  - KEY=value
 //  arg = ['K', 'E', 'Y', '=', 'v', 'a', 'l', 'u', 'e', '\0']
+//  value = "value"
 //
 static void
 get_environ_value(char* arg, char* value, int idx) {
