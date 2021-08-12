@@ -1,18 +1,19 @@
 #include "parsing.h"
 
 // parses an argument of the command stream input
-static char*
-get_token(char* buf, int idx) {
-
-	char* tok;
+static char *
+get_token(char *buf, int idx)
+{
+	char *tok;
 	int i;
 
-	tok = (char*)calloc(ARGSIZE, sizeof(char));
+	tok = (char *) calloc(ARGSIZE, sizeof(char));
 	i = 0;
 
 	while (buf[idx] != SPACE && buf[idx] != END_STRING) {
 		tok[i] = buf[idx];
-		i++; idx++;
+		i++;
+		idx++;
 	}
 
 	return tok;
@@ -20,23 +21,23 @@ get_token(char* buf, int idx) {
 
 // parses and changes stdin/out/err if needed
 static bool
-parse_redir_flow(struct execcmd* c, char* arg) {
-
+parse_redir_flow(struct execcmd *c, char *arg)
+{
 	int inIdx, outIdx;
 
 	// flow redirection for output
 	if ((outIdx = block_contains(arg, '>')) >= 0) {
 		switch (outIdx) {
-			// stdout redir
-			case 0: {
-				strcpy(c->out_file, arg + 1);
-				break;
-			}
-			// stderr redir
-			case 1: {
-				strcpy(c->err_file, &arg[outIdx + 1]);
-				break;
-			}
+		// stdout redir
+		case 0: {
+			strcpy(c->out_file, arg + 1);
+			break;
+		}
+		// stderr redir
+		case 1: {
+			strcpy(c->err_file, &arg[outIdx + 1]);
+			break;
+		}
 		}
 
 		free(arg);
@@ -62,12 +63,11 @@ parse_redir_flow(struct execcmd* c, char* arg) {
 // parses and sets a pair KEY=VALUE
 // environment variable
 static bool
-parse_environ_var(struct execcmd* c, char* arg) {
-
+parse_environ_var(struct execcmd *c, char *arg)
+{
 	// sets environment variables apart from the
 	// ones defined in the global variable "environ"
 	if (block_contains(arg, '=') > 0) {
-
 		// checks if the KEY part of the pair
 		// does not contain a '-' char which means
 		// that it is not a environ var, but also
@@ -99,9 +99,9 @@ parse_environ_var(struct execcmd* c, char* arg) {
 // 	It could be greater than the current size of 'arg'
 // 	If that's the case, you should realloc 'arg'
 // 		to the new size.
-static char*
-expand_environ_var(char* arg) {
-
+static char *
+expand_environ_var(char *arg)
+{
 	// Your code here
 
 	return arg;
@@ -111,17 +111,16 @@ expand_environ_var(char* arg) {
 // - the arguments passed to the program
 // - stdin/stdout/stderr flow changes
 // - environment variables (expand and set)
-static struct cmd*
-parse_exec(char* buf_cmd) {
-
-	struct execcmd* c;
-	char* tok;
+static struct cmd *
+parse_exec(char *buf_cmd)
+{
+	struct execcmd *c;
+	char *tok;
 	int idx = 0, argc = 0;
 
-	c = (struct execcmd*)exec_cmd_create(buf_cmd);
+	c = (struct execcmd *) exec_cmd_create(buf_cmd);
 
 	while (buf_cmd[idx] != END_STRING) {
-
 		tok = get_token(buf_cmd, idx);
 		idx = idx + strlen(tok);
 
@@ -139,19 +138,19 @@ parse_exec(char* buf_cmd) {
 		c->argv[argc++] = tok;
 	}
 
-	c->argv[argc] = (char*)NULL;
+	c->argv[argc] = (char *) NULL;
 	c->argc = argc;
 
-	return (struct cmd*)c;
+	return (struct cmd *) c;
 }
 
 // parses a command knowing that it contains
 // the '&' char
-static struct cmd*
-parse_back(char* buf_cmd) {
-
+static struct cmd *
+parse_back(char *buf_cmd)
+{
 	int i = 0;
-	struct cmd* e;
+	struct cmd *e;
 
 	while (buf_cmd[i] != '&')
 		i++;
@@ -165,9 +164,9 @@ parse_back(char* buf_cmd) {
 
 // parses a command and checks if it contains
 // the '&' (background process) character
-static struct cmd*
-parse_cmd(char* buf_cmd) {
-
+static struct cmd *
+parse_cmd(char *buf_cmd)
+{
 	if (strlen(buf_cmd) == 0)
 		return NULL;
 
@@ -176,8 +175,7 @@ parse_cmd(char* buf_cmd) {
 	// checks if the background symbol is after
 	// a redir symbol, in which case
 	// it does not have to run in in the 'back'
-	if ((idx = block_contains(buf_cmd, '&')) >= 0 &&
-			buf_cmd[idx - 1] != '>')
+	if ((idx = block_contains(buf_cmd, '&')) >= 0 && buf_cmd[idx - 1] != '>')
 		return parse_back(buf_cmd);
 
 	return parse_exec(buf_cmd);
@@ -185,16 +183,15 @@ parse_cmd(char* buf_cmd) {
 
 // parses the command line
 // looking for the pipe character '|'
-struct cmd*
-parse_line(char* buf) {
-
+struct cmd *
+parse_line(char *buf)
+{
 	struct cmd *r, *l;
 
-	char* right = split_line(buf, '|');
+	char *right = split_line(buf, '|');
 
 	l = parse_cmd(buf);
 	r = parse_cmd(right);
 
 	return pipe_cmd_create(l, r);
 }
-

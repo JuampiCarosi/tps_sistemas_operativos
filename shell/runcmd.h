@@ -8,6 +8,6 @@
 #include "freecmd.h"
 #include "builtin.h"
 
-int run_cmd(char* cmd);
+int run_cmd(char *cmd);
 
-#endif // RUNCMD_H
+#endif  // RUNCMD_H

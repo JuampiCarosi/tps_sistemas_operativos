@@ -42,4 +42,4 @@
 
 #define EXIT_SHELL 1
 
-#endif //DEFS_H
+#endif  // DEFS_H
