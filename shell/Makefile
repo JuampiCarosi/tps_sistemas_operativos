@@ -15,7 +15,10 @@ valgrind: $(EXEC)
 
 $(EXEC): $(OBJS)
 
+format: .clang-files .clang-format
+	xargs -r clang-format -i <$<
+
 clean:
 	rm -rf $(EXEC) *.o core vgcore.*
 
-.PHONY: all clean run valgrind
+.PHONY: all clean format run valgrind
