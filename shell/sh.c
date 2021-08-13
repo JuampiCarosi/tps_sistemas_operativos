@@ -16,7 +16,7 @@ run_shell()
 			return;
 }
 
-// initialize the shell
+// initializes the shell
 // with the "HOME" directory
 static void
 init_shell()

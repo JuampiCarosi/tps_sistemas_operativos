@@ -1,7 +1,7 @@
 #include "utils.h"
 
 // splits a string line in two
-// acording to the splitter character
+// according to the splitter character
 char *
 split_line(char *buf, char splitter)
 {

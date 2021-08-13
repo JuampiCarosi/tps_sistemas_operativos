@@ -47,7 +47,7 @@ run_cmd(char *cmd)
 	// background process special treatment
 	// Hint:
 	// - check if the process is
-	// 	going to be run in the 'back'
+	//		going to be run in the 'back'
 	// - print info about it with
 	// 	'print_back_info()'
 	//

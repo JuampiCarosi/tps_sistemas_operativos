@@ -89,16 +89,15 @@ parse_environ_var(struct execcmd *c, char *arg)
 // expand environment variables. In other words, if the token
 // happens to start with '$', the correct substitution with the
 // environment value should be performed. Otherwise the same
-// token is returned.
+// token is returned. If the variable does not exist, an empty string should be
+// returned within the token
 //
 // Hints:
-// - check if the first byte of the argument
-// 	contains the '$'
+// - check if the first byte of the argument contains the '$'
 // - expand it and copy the value in 'arg'
 // - remember to check the size of variable's value
-// 	It could be greater than the current size of 'arg'
-// 	If that's the case, you should realloc 'arg'
-// 		to the new size.
+//		It could be greater than the current size of 'arg'
+//		If that's the case, you should realloc 'arg' to the new size.
 static char *
 expand_environ_var(char *arg)
 {
@@ -144,8 +143,7 @@ parse_exec(char *buf_cmd)
 	return (struct cmd *) c;
 }
 
-// parses a command knowing that it contains
-// the '&' char
+// parses a command knowing that it contains the '&' char
 static struct cmd *
 parse_back(char *buf_cmd)
 {
@@ -162,8 +160,8 @@ parse_back(char *buf_cmd)
 	return back_cmd_create(e);
 }
 
-// parses a command and checks if it contains
-// the '&' (background process) character
+// parses a command and checks if it contains the '&'
+// (background process) character
 static struct cmd *
 parse_cmd(char *buf_cmd)
 {
