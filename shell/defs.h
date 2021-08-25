@@ -30,16 +30,16 @@
 #define ARGSIZE 1024
 #define FNAMESIZE 1024
 
-// Command representation after parsed
+// command representation after parsed
 #define EXEC 1
 #define BACK 2
 #define REDIR 3
 #define PIPE 4
 
-// Fd for pipes
+// fd numbers for pipes
 #define READ 0
 #define WRITE 1
 
 #define EXIT_SHELL 1
 
-#endif //DEFS_H
+#endif  // DEFS_H

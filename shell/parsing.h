@@ -6,6 +6,6 @@
 #include "createcmd.h"
 #include "utils.h"
 
-struct cmd* parse_line(char* b);
+struct cmd *parse_line(char *b);
 
-#endif // PARSING_H
+#endif  // PARSING_H

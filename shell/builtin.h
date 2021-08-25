@@ -5,10 +5,10 @@
 
 extern char promt[PRMTLEN];
 
-int cd(char* cmd);
+int cd(char *cmd);
 
-int exit_shell(char* cmd);
+int exit_shell(char *cmd);
 
-int pwd(char* cmd);
+int pwd(char *cmd);
 
-#endif // BUILTIN_H
+#endif  // BUILTIN_H

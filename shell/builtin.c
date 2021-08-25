@@ -5,8 +5,8 @@
 //
 // (It must not be called from here)
 int
-exit_shell(char* cmd) {
-
+exit_shell(char *cmd)
+{
 	// Your code here
 
 	return 0;
@@ -25,8 +25,8 @@ exit_shell(char* cmd) {
 //  1. cmd = ['c','d', ' ', '/', 'b', 'i', 'n', '\0']
 //  2. cmd = ['c','d', '\0']
 int
-cd(char* cmd) {
-
+cd(char *cmd)
+{
 	// Your code here
 
 	return 0;
@@ -38,10 +38,9 @@ cd(char* cmd) {
 // (It has to be executed here and then
 // 	return true)
 int
-pwd(char* cmd) {
-
+pwd(char *cmd)
+{
 	// Your code here
 
 	return 0;
 }
-
