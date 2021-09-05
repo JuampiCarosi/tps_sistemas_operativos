@@ -10,8 +10,10 @@ read_line(const char *promt)
 {
 	int i = 0, c = 0;
 
+    #ifndef SHELL_NO_INTERACTIVE
 	fprintf(stdout, "%s %s %s\n", COLOR_RED, promt, COLOR_RESET);
 	fprintf(stdout, "%s", "$ ");
+    #endif
 
 	memset(buffer, 0, BUFLEN);
 
