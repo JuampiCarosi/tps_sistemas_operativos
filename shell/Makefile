@@ -27,4 +27,4 @@ format: .clang-files .clang-format
 clean:
 	rm -rf $(EXEC) *.o core vgcore.*
 
-.PHONY: all clean format run valgrind sh
+.PHONY: all clean format run valgrind
