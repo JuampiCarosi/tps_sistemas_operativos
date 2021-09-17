@@ -15,10 +15,16 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 
+#ifndef SHELL_NO_COLORS
 // color scape strings
 #define COLOR_BLUE "\x1b[34m"
 #define COLOR_RED "\x1b[31m"
 #define COLOR_RESET "\x1b[0m"
+#else
+#define COLOR_BLUE ""
+#define COLOR_RED ""
+#define COLOR_RESET ""
+#endif
 
 #define END_STRING '\0'
 #define END_LINE '\n'
