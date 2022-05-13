@@ -6,12 +6,12 @@ static char buffer[BUFLEN];
 // reads a line from the standard input
 // and prints the prompt
 char *
-read_line(const char *promt)
+read_line(const char *prompt)
 {
 	int i = 0, c = 0;
 
 #ifndef SHELL_NO_INTERACTIVE
-	fprintf(stdout, "%s %s %s\n", COLOR_RED, promt, COLOR_RESET);
+	fprintf(stdout, "%s %s %s\n", COLOR_RED, prompt, COLOR_RESET);
 	fprintf(stdout, "%s", "$ ");
 #endif
 

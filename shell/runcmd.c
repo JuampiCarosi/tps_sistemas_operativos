@@ -11,7 +11,7 @@ run_cmd(char *cmd)
 	struct cmd *parsed;
 
 	// if the "enter" key is pressed
-	// just print the promt again
+	// just print the prompt again
 	if (cmd[0] == END_STRING)
 		return 0;
 
@@ -23,7 +23,7 @@ run_cmd(char *cmd)
 	if (exit_shell(cmd))
 		return EXIT_SHELL;
 
-	// "pwd" buil-in call
+	// "pwd" built-in call
 	if (pwd(cmd))
 		return 0;
 
@@ -41,7 +41,7 @@ run_cmd(char *cmd)
 		exec_cmd(parsed);
 	}
 
-	// store the pid of the process
+	// stores the pid of the process
 	parsed->pid = p;
 
 	// background process special treatment
