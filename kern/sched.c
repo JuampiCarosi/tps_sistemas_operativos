@@ -29,7 +29,11 @@ sched_yield(void)
 	// below to halt the cpu.
 
 	// Your code here
-
+	// Wihtout scheduler, keep runing the last environment while it exists
+	if (curenv) {
+		env_run(curenv);
+	}
+ 
 	// sched_halt never returns
 	sched_halt();
 }
