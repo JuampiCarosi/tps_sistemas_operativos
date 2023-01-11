@@ -115,12 +115,12 @@ void
 env_init(void)
 {
 	// Set up envs array
-	for(int i = 0; i < NENV; i++) {
+	for (int i = 0; i < NENV; i++) {
 		envs[i].env_id = 0;
 		envs[i].env_status = ENV_FREE;
 		envs[i].env_link = (envs + i + 1);
 	}
-	envs[NENV-1].env_link = NULL;
+	envs[NENV - 1].env_link = NULL;
 	env_free_list = envs;
 
 	// Per-CPU part of the initialization
@@ -183,7 +183,7 @@ env_setup_vm(struct Env *e)
 	//	is an exception -- you need to increment env_pgdir's
 	//	pp_ref for env_free to work correctly.
 	//    - The functions in kern/pmap.h are handy.
-	e->env_pgdir = (uint32_t*)page2kva(p);
+	e->env_pgdir = (uint32_t *) page2kva(p);
 	memcpy(e->env_pgdir, kern_pgdir, PGSIZE);
 	p->pp_ref++;
 
@@ -275,16 +275,16 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 static void
 region_alloc(struct Env *e, void *va, size_t len)
 {
-	uint32_t va_lo = ROUNDDOWN((uint32_t)va, PGSIZE);
-	uint32_t va_hi = ROUNDUP((uint32_t)va + len, PGSIZE);	
+	uint32_t va_lo = ROUNDDOWN((uint32_t) va, PGSIZE);
+	uint32_t va_hi = ROUNDUP((uint32_t) va + len, PGSIZE);
 	if (va_hi > UTOP)
 		panic("region_alloc: cannot map in high va\n");
 
-	struct PageInfo* p; 
-	for(uint32_t va_act  = va_lo; va_act  < va_hi; va_act+=PGSIZE) {
-		if ( !(p = page_alloc(!ALLOC_ZERO)) )
+	struct PageInfo *p;
+	for (uint32_t va_act = va_lo; va_act < va_hi; va_act += PGSIZE) {
+		if (!(p = page_alloc(!ALLOC_ZERO)))
 			panic("region_alloc: could not alloc page\n");
-		if (page_insert(e->env_pgdir, p,(uint32_t*) va_act, PTE_U | PTE_W))
+		if (page_insert(e->env_pgdir, p, (uint32_t *) va_act, PTE_U | PTE_W))
 			panic("region_alloc: page_insert falied\n");
 	}
 
@@ -347,37 +347,38 @@ load_icode(struct Env *e, uint8_t *binary)
 	//  to make sure that the environment starts executing there.
 
 	// Get elf file header
-	struct Elf *elf = (struct Elf*) binary;
+	struct Elf *elf = (struct Elf *) binary;
 	cprintf("%p\n", elf);
-	if(elf->e_magic != ELF_MAGIC)
+	if (elf->e_magic != ELF_MAGIC)
 		panic("load_icode: not an elf file\n");
 
 	lcr3(PADDR(e->env_pgdir));
-	
+
 	struct Proghdr *ph, *ph_last;
 
-	ph = (struct Proghdr*) ((char*)(binary) + elf->e_phoff);
+	ph = (struct Proghdr *) ((char *) (binary) + elf->e_phoff);
 	ph_last = ph + elf->e_phnum;
 
-	for(; ph < ph_last; ph++) {
-		if(ph->p_type != ELF_PROG_LOAD) continue;
+	for (; ph < ph_last; ph++) {
+		if (ph->p_type != ELF_PROG_LOAD)
+			continue;
 
-		region_alloc(e, (void*)ph->p_va, ph->p_memsz);
-		memset((uint32_t*)ph->p_va, 0x0, ph->p_memsz);
-		memcpy((uint32_t*)ph->p_va, ((char*)(binary))+ph->p_offset, ph->p_filesz);
+		region_alloc(e, (void *) ph->p_va, ph->p_memsz);
+		memset((uint32_t *) ph->p_va, 0x0, ph->p_memsz);
+		memcpy((uint32_t *) ph->p_va,
+		       ((char *) (binary)) + ph->p_offset,
+		       ph->p_filesz);
 	}
-		
+
 
 	// Now map one page for the program's initial stack
 	// at virtual address USTACKTOP - PGSIZE.
-	region_alloc(e, (void*)(USTACKTOP-PGSIZE), PGSIZE);
+	region_alloc(e, (void *) (USTACKTOP - PGSIZE), PGSIZE);
 
 	// Setting entry point
-	e->env_tf.tf_eip = elf->e_entry;	
+	e->env_tf.tf_eip = elf->e_entry;
 
 	lcr3(PADDR(kern_pgdir));
-
-
 }
 
 //
@@ -394,7 +395,7 @@ env_create(uint8_t *binary, enum EnvType type)
 	int err = env_alloc(&env, 0x0);
 	if (err < 0)
 		panic("env_create: %e\n", err);
-	
+
 	load_icode(env, binary);
 	env->env_type = type;
 }
@@ -470,9 +471,9 @@ env_destroy(struct Env *e)
 	env_free(e);
 
 	if (curenv == e) {
-		//cprintf("[%08x] env_destroy %08x\n", curenv ? curenv->env_id : 0, e->env_id);
+		// cprintf("[%08x] env_destroy %08x\n", curenv ? curenv->env_id : 0, e->env_id);
 		curenv = NULL;
-		//cprintf("[%08x] env_destroy %08x\n", curenv ? curenv->env_id : 0, e->env_id);
+		// cprintf("[%08x] env_destroy %08x\n", curenv ? curenv->env_id : 0, e->env_id);
 		sched_yield();
 	}
 }
@@ -481,7 +482,7 @@ env_destroy(struct Env *e)
 // Loads environment page directory as a preparation for context_switch.
 //
 void
-env_load_pgdir(struct Env* e)
+env_load_pgdir(struct Env *e)
 {
 	lcr3(PADDR(e->env_pgdir));
 }
@@ -509,16 +510,17 @@ env_run(struct Env *e)
 	//	and make sure you have set the relevant parts of
 	//	e->env_tf to sensible values.
 	// Your code here
+	curenv = e;
 
 	// Needed if we run with multiple procesors
 	// Record the CPU we are running on for user-space debugging
 	unlock_kernel();
 	curenv->env_cpunum = cpunum();
-	
+
 	// Step 2: Use context_switch() to restore the environment's
 	//	   registers and drop into user mode in the
 	//	   environment.
-	// Your code here
+	context_switch(&e->env_tf);
 
 	panic("env_run not yet implemented"); /* mostly to placate the compiler */
 }

@@ -30,8 +30,9 @@ ipc_recv(envid_t *from_env_store, void *pg, int *perm_store)
 	if (perm_store)
 		*perm_store = (!err) ? thisenv->env_ipc_perm : 0;
 
-	if (!err) err = thisenv->env_ipc_value;
-	
+	if (!err)
+		err = thisenv->env_ipc_value;
+
 	return err;
 }
 
@@ -47,14 +48,15 @@ void
 ipc_send(envid_t to_env, uint32_t val, void *pg, int perm)
 {
 	if (!pg)
-		pg = (void*) UTOP;
+		pg = (void *) UTOP;
 	int r = sys_ipc_try_send(to_env, val, pg, perm);
 	while (r == -E_IPC_NOT_RECV) {
 		sys_yield();
 		r = sys_ipc_try_send(to_env, val, pg, perm);
 	}
 
-	if (r < 0) panic("ipc_send: %e", r);
+	if (r < 0)
+		panic("ipc_send: %e", r);
 }
 
 // Find the first environment of the given type.  We'll use this to

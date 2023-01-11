@@ -33,7 +33,7 @@ sched_yield(void)
 	if (curenv) {
 		env_run(curenv);
 	}
- 
+
 	// sched_halt never returns
 	sched_halt();
 }
@@ -72,8 +72,8 @@ sched_halt(void)
 	// Release the big kernel lock as if we were "leaving" the kernel
 	unlock_kernel();
 
-	// Once the scheduler has finishied it's work, print statistics on performance.
-	// Your code here
+	// Once the scheduler has finishied it's work, print statistics on
+	// performance. Your code here
 
 	// Reset stack pointer, enable interrupts and then halt.
 	asm volatile("movl $0, %%ebp\n"

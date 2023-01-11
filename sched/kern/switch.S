@@ -9,6 +9,8 @@
 
 .globl context_switch;
 context_switch:
+	movl 4(%esp), %esp
+	movl $2, %eax
 
 spin:
 	jmp spin

@@ -79,13 +79,13 @@ trap_init(void)
 	SETGATE(idt[T_ILLOP], 0, GD_KT, &trap6, 0);
 	SETGATE(idt[T_DEVICE], 0, GD_KT, &trap7, 0);
 	SETGATE(idt[T_DBLFLT], 0, GD_KT, &trap8, 0);
-	//SETGATE(idt[9], 0, GD_KT, &trap9, 0);
+	// SETGATE(idt[9], 0, GD_KT, &trap9, 0);
 	SETGATE(idt[T_TSS], 0, GD_KT, &trap10, 0);
 	SETGATE(idt[T_SEGNP], 0, GD_KT, &trap11, 0);
 	SETGATE(idt[T_STACK], 0, GD_KT, &trap12, 0);
 	SETGATE(idt[T_GPFLT], 0, GD_KT, &trap13, 0);
 	SETGATE(idt[T_PGFLT], 0, GD_KT, &trap14, 0);
-	//SETGATE(idt[15], 0, GD_KT, &trap15, 0);
+	// SETGATE(idt[15], 0, GD_KT, &trap15, 0);
 	SETGATE(idt[T_FPERR], 0, GD_KT, &trap16, 0);
 	SETGATE(idt[T_ALIGN], 0, GD_KT, &trap17, 0);
 	SETGATE(idt[T_MCHK], 0, GD_KT, &trap18, 0);
@@ -134,8 +134,8 @@ trap_init_percpu(void)
 	thists->ts_iomb = sizeof(struct Taskstate);
 
 	// Initialize the TSS slot of the gdt.
-	gdt[(GD_TSS0 >> 3) + thisid] =
-	        SEG16(STS_T32A, (uint32_t)(thists), sizeof(struct Taskstate) - 1, 0);
+	gdt[(GD_TSS0 >> 3) + thisid] = SEG16(
+	        STS_T32A, (uint32_t)(thists), sizeof(struct Taskstate) - 1, 0);
 	gdt[(GD_TSS0 >> 3) + thisid].sd_s = 0;
 
 	// Load the TSS selector (like other segment selectors, the
@@ -196,22 +196,21 @@ static void
 trap_dispatch(struct Trapframe *tf)
 {
 	// Handle processor exceptions.
-	switch(tf->tf_trapno) {
+	switch (tf->tf_trapno) {
 	case T_BRKPT:
 		monitor(tf);
 		return;
 	case T_PGFLT:
-		page_fault_handler(tf);		
+		page_fault_handler(tf);
 		return;
 	case T_SYSCALL:
-		tf->tf_regs.reg_eax = syscall(	tf->tf_regs.reg_eax,
-						tf->tf_regs.reg_edx,
-						tf->tf_regs.reg_ecx,
-						tf->tf_regs.reg_ebx,
-						tf->tf_regs.reg_edi,
-						tf->tf_regs.reg_esi);
+		tf->tf_regs.reg_eax = syscall(tf->tf_regs.reg_eax,
+		                              tf->tf_regs.reg_edx,
+		                              tf->tf_regs.reg_ecx,
+		                              tf->tf_regs.reg_ebx,
+		                              tf->tf_regs.reg_edi,
+		                              tf->tf_regs.reg_esi);
 		return;
-		
 	}
 
 	// Handle spurious interrupts
@@ -225,7 +224,7 @@ trap_dispatch(struct Trapframe *tf)
 
 	// Handle clock interrupts. Don't forget to acknowledge the
 	// interrupt using lapic_eoi() before calling the scheduler!
-	switch(tf->tf_trapno - IRQ_OFFSET) {
+	switch (tf->tf_trapno - IRQ_OFFSET) {
 	case IRQ_TIMER:
 		lapic_eoi();
 		sched_yield();
@@ -312,7 +311,7 @@ page_fault_handler(struct Trapframe *tf)
 	// Handle kernel-mode page faults.
 	// If page fault happens in kernel-mode, panic
 	if (!(tf->tf_cs & 0x3))
-		panic("page fault in kernel mode\n");	
+		panic("page fault in kernel mode\n");
 
 	// We've already handled kernel-mode exceptions, so if we get here,
 	// the page fault happened in user mode.
@@ -345,12 +344,11 @@ page_fault_handler(struct Trapframe *tf)
 	//   To change what the user environment runs, modify 'curenv->env_tf'
 	//   (the 'tf' variable points at 'curenv->env_tf').
 	if (curenv->env_pgfault_upcall) {
-
 		uint32_t exstk = (UXSTACKTOP - PGSIZE);
 		uint32_t exstk_top = (UXSTACKTOP - 1);
 		struct UTrapframe utf;
 
-		user_mem_assert(curenv, (void*)exstk, PGSIZE, PTE_U | PTE_W);
+		user_mem_assert(curenv, (void *) exstk, PGSIZE, PTE_U | PTE_W);
 
 		utf.utf_fault_va = fault_va;
 		utf.utf_err = tf->tf_err;
@@ -361,19 +359,19 @@ page_fault_handler(struct Trapframe *tf)
 		utf.utf_esp = tf->tf_esp;
 
 		uint32_t tmp = utf.utf_esp;
-	
+
 		if (utf.utf_esp < exstk || utf.utf_esp > exstk_top) {
 			tmp = exstk_top - sizeof(struct UTrapframe);
 		} else {
 			tmp -= sizeof(uint32_t);
-			*(uint32_t*)(tmp) = 0; 
+			*(uint32_t *) (tmp) = 0;
 			tmp -= sizeof(struct UTrapframe);
 		}
-		*(struct UTrapframe*)(tmp) = utf;
+		*(struct UTrapframe *) (tmp) = utf;
 
 		if (tmp < exstk || tmp > exstk_top)
 			panic("page_fault_handler: exception stack overflow");
-		
+
 		tf->tf_esp = tmp;
 		tf->tf_eip = (uint32_t) curenv->env_pgfault_upcall;
 		env_run(curenv);

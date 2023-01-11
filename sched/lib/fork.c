@@ -24,7 +24,7 @@ pgfault(struct UTrapframe *utf)
 	//   Use the read-only page table mappings at uvpt
 	//   (see <inc/memlayout.h>).
 
-	pte_t fault_pte = uvpt[((uint32_t)addr) >> PGSHIFT];
+	pte_t fault_pte = uvpt[((uint32_t) addr) >> PGSHIFT];
 	if ((err & FEC_WR) & !(fault_pte & PTE_COW))
 		panic("pgfault: write fault on a non COW page");
 
@@ -63,7 +63,7 @@ duppage(envid_t envid, unsigned pn)
 {
 	int r;
 
-	void *addr = (void*)(pn << PGSHIFT);
+	void *addr = (void *) (pn << PGSHIFT);
 
 	pte_t pte = uvpt[pn];
 
@@ -111,7 +111,7 @@ static void
 dup_or_share(envid_t envid, uint32_t pnum, int perm)
 {
 	int r;
-	void *addr = (void*)(pnum << PGSHIFT);
+	void *addr = (void *) (pnum << PGSHIFT);
 
 	pte_t pte = uvpt[pnum];
 
@@ -131,7 +131,7 @@ dup_or_share(envid_t envid, uint32_t pnum, int perm)
 		if ((r = sys_page_map(0, addr, envid, addr, perm)) < 0)
 			panic("dup_or_share: sys_page_map: %e", r);
 	} else {
-		// Pido una nueva pagina 
+		// Pido una nueva pagina
 		if ((r = sys_page_alloc(envid, addr, perm)) < 0)
 			panic("dup_or_share: sys_page_alloc: %e", r);
 		if ((r = sys_page_map(envid, addr, 0, UTEMP, perm)) < 0)
@@ -187,7 +187,6 @@ fork_v0(void)
 }
 
 
-
 //
 // User-level fork with copy-on-write.
 // Set up our page fault handler appropriately.
@@ -238,13 +237,13 @@ fork(void)
 	}
 
 	uint32_t exstk = (UXSTACKTOP - PGSIZE);
-	int r = sys_page_alloc(envid, (void*)exstk, PTE_U | PTE_P | PTE_W);
+	int r = sys_page_alloc(envid, (void *) exstk, PTE_U | PTE_P | PTE_W);
 	if (r < 0)
 		panic("fork: sys_page_alloc of exception stk: %e", r);
 	r = sys_env_set_pgfault_upcall(envid, thisenv->env_pgfault_upcall);
 	if (r < 0)
 		panic("fork: sys_env_set_pgfault_upcall on childern: %e", r);
-	
+
 	if ((r = sys_env_set_status(envid, ENV_RUNNABLE)) < 0)
 		panic("sys_env_set_status: %e", r);
 
