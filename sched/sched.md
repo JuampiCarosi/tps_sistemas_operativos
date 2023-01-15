@@ -1,3 +1,3 @@
-# sched.md
+# fisop-sched
 
-Lugar para respuestas en prosa, seguimientos con GDB y documentacion del TP
+Lugar para respuestas en prosa, seguimientos con GDB y documentación del TP.
