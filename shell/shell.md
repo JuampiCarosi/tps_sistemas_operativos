@@ -1,14 +1,6 @@
-# Lab: shell
+# shell
 
 ### Búsqueda en $PATH
-
----
-
-### Comandos built-in
-
----
-
-### Variables de entorno adicionales
 
 ---
 
@@ -20,7 +12,11 @@
 
 ---
 
-### Tuberías simples (pipes)
+### Tuberías múltiples
+
+---
+
+### Variables de entorno temporarias
 
 ---
 
@@ -28,4 +24,10 @@
 
 ---
 
+### Comandos built-in
 
+---
+
+### Historial
+
+---
