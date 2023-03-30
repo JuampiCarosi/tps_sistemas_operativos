@@ -44,3 +44,16 @@ pwd(char *cmd)
 
 	return 0;
 }
+
+// returns true if `history` was invoked
+// in the command line
+//
+// (It has to be executed here and then
+// 	return true)
+int
+history(char *cmd)
+{
+	// Your code here
+
+	return 0;
+}

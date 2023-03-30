@@ -11,4 +11,6 @@ int exit_shell(char *cmd);
 
 int pwd(char *cmd);
 
+int history(char *cmd);
+
 #endif  // BUILTIN_H

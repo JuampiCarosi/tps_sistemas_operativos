@@ -15,6 +15,10 @@ run_cmd(char *cmd)
 	if (cmd[0] == END_STRING)
 		return 0;
 
+	// "history" built-in call
+	if (history(cmd))
+		return 0;
+
 	// "cd" built-in call
 	if (cd(cmd))
 		return 0;
