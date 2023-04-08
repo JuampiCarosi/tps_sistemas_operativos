@@ -4,7 +4,7 @@ repos:
     rev: v1.3.5
     hooks:
       - id: clang-format
-        args: [-i]
+        args: [-i, --style=file]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:
