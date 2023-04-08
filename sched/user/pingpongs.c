@@ -21,7 +21,12 @@ umain(int argc, char **argv)
 
 	while (1) {
 		ipc_recv(&who, 0, 0);
-		cprintf("%x got %d from %x (thisenv is %p %x)\n", sys_getenvid(), val, who, thisenv, thisenv->env_id);
+		cprintf("%x got %d from %x (thisenv is %p %x)\n",
+		        sys_getenvid(),
+		        val,
+		        who,
+		        thisenv,
+		        thisenv->env_id);
 		if (val == 10)
 			return;
 		++val;
@@ -29,5 +34,4 @@ umain(int argc, char **argv)
 		if (val == 10)
 			return;
 	}
-
 }

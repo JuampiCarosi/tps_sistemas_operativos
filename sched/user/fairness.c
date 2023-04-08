@@ -22,4 +22,3 @@ umain(int argc, char **argv)
 			ipc_send(envs[1].env_id, 0, 0, 0);
 	}
 }
-

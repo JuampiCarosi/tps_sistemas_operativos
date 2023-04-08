@@ -17,4 +17,3 @@ umain(int argc, char **argv)
 		sys_yield();
 	}
 }
-

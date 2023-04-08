@@ -47,7 +47,6 @@ umain(int argc, char **argv)
 		primeproc();
 
 	// feed all the integers through
-	for (i = 2; ; i++)
+	for (i = 2;; i++)
 		ipc_send(id, i, 0, 0);
 }
-

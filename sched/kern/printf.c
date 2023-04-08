@@ -18,7 +18,7 @@ vcprintf(const char *fmt, va_list ap)
 {
 	int cnt = 0;
 
-	vprintfmt((void*)putch, &cnt, fmt, ap);
+	vprintfmt((void *) putch, &cnt, fmt, ap);
 	return cnt;
 }
 
@@ -34,4 +34,3 @@ cprintf(const char *fmt, ...)
 
 	return cnt;
 }
-

@@ -7,7 +7,7 @@ write(uint16_t *addr, uint16_t value)
 {
 	int r;
 
-	if ((r = sys_page_alloc(0, addr, PTE_P|PTE_U|PTE_W)) < 0)
+	if ((r = sys_page_alloc(0, addr, PTE_P | PTE_U | PTE_W)) < 0)
 		panic("sys_page_alloc: %e", r);
 	addr[0] = value;
 	if ((r = sys_page_unmap(0, addr)) < 0)
@@ -19,7 +19,7 @@ check(uint16_t *addr)
 {
 	int r;
 
-	if ((r = sys_page_alloc(0, addr, PTE_P|PTE_U)) < 0)
+	if ((r = sys_page_alloc(0, addr, PTE_P | PTE_U)) < 0)
 		panic("sys_page_alloc: %e", r);
 	if (addr[0] != '\0')
 		panic("The allocated memory is not initialized to zero");

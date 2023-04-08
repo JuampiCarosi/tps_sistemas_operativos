@@ -17,8 +17,7 @@ umain(int argc, char **argv)
 		if (yield) {
 			cprintf("I am %08x and I like my interrupt #%u\n", me, n);
 			sys_yield();
-		}
-		else {
+		} else {
 			cprintf("I am %08x and my spin will go on #%u\n", me, n);
 		}
 	}

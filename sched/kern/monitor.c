@@ -12,14 +12,14 @@
 #include <kern/kdebug.h>
 #include <kern/trap.h>
 
-#define CMDBUF_SIZE	80	// enough for one VGA text line
+#define CMDBUF_SIZE 80  // enough for one VGA text line
 
 
 struct Command {
 	const char *name;
 	const char *desc;
 	// return -1 to force monitor to exit
-	int (*func)(int argc, char** argv, struct Trapframe* tf);
+	int (*func)(int argc, char **argv, struct Trapframe *tf);
 };
 
 static struct Command commands[] = {
@@ -51,7 +51,7 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 	cprintf("  edata  %08x (virt)  %08x (phys)\n", edata, edata - KERNBASE);
 	cprintf("  end    %08x (virt)  %08x (phys)\n", end, end - KERNBASE);
 	cprintf("Kernel executable memory footprint: %dKB\n",
-		ROUNDUP(end - entry, 1024) / 1024);
+	        ROUNDUP(end - entry, 1024) / 1024);
 	return 0;
 }
 
@@ -85,7 +85,7 @@ runcmd(char *buf, struct Trapframe *tf)
 			break;
 
 		// save and scan past next arg
-		if (argc == MAXARGS-1) {
+		if (argc == MAXARGS - 1) {
 			cprintf("Too many arguments (max %d)\n", MAXARGS);
 			return 0;
 		}

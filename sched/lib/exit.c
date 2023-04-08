@@ -6,4 +6,3 @@ exit(void)
 {
 	sys_env_destroy(0);
 }
-

@@ -32,11 +32,13 @@ set_pgfault_handler(void (*handler)(struct UTrapframe *utf))
 		// Allocate exception stack page with write access
 		uint32_t exstk = (UXSTACKTOP - PGSIZE);
 		int perm = PTE_U | PTE_P | PTE_W;
-		r = sys_page_alloc(0, (void*)exstk, perm);
-		if (r < 0) return;
+		r = sys_page_alloc(0, (void *) exstk, perm);
+		if (r < 0)
+			return;
 
 		r = sys_env_set_pgfault_upcall(0, _pgfault_upcall);
-		if (r < 0) return;
+		if (r < 0)
+			return;
 	}
 
 	// Save handler pointer for assembly to call.

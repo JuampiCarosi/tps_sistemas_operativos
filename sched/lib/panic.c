@@ -15,7 +15,10 @@ _panic(const char *file, int line, const char *fmt, ...)
 
 	// Print the panic message
 	cprintf("[%08x] user panic in %s at %s:%d: ",
-		sys_getenvid(), binaryname, file, line);
+	        sys_getenvid(),
+	        binaryname,
+	        file,
+	        line);
 	vcprintf(fmt, ap);
 	cprintf("\n");
 
@@ -23,4 +26,3 @@ _panic(const char *file, int line, const char *fmt, ...)
 	while (1)
 		asm volatile("int3");
 }
-

@@ -24,6 +24,4 @@ umain(int argc, char **argv)
 		if (i == 10)
 			return;
 	}
-
 }
-

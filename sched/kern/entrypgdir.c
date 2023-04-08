@@ -1,7 +1,7 @@
 #include <inc/mmu.h>
 #include <inc/memlayout.h>
 
-//pte_t entry_pgtable[NPTENTRIES];
+// pte_t entry_pgtable[NPTENTRIES];
 
 // The entry.S page directory maps the first 4MB of physical memory
 // starting at virtual address KERNBASE (that is, it maps virtual
@@ -17,14 +17,11 @@
 // related to linking and static initializers, we use "x + PTE_P"
 // here, rather than the more standard "x | PTE_P".  Everywhere else
 // you should use "|" to combine flags.
-__attribute__((__aligned__(PGSIZE)))
-pde_t entry_pgdir[NPDENTRIES] = {
+__attribute__((__aligned__(PGSIZE))) pde_t entry_pgdir[NPDENTRIES] = {
 	// Map VA's [0, 4MB) to PA's [0, 4MB)
-	[0]
-		= 0x00000 + PTE_P + PTE_PS,
+	[0] = 0x00000 + PTE_P + PTE_PS,
 	// Map VA's [KERNBASE, KERNBASE+4MB) to PA's [0, 4MB)
-	[KERNBASE>>PDXSHIFT]
-		= 0x00000 + PTE_P + PTE_W + PTE_PS
+	[KERNBASE >> PDXSHIFT] = 0x00000 + PTE_P + PTE_W + PTE_PS
 };
 
 #if 0

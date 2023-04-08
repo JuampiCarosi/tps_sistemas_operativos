@@ -21,5 +21,3 @@ getchar(void)
 		sys_yield();
 	return r;
 }
-
-
