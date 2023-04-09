@@ -111,9 +111,9 @@ boot_alloc(uint32_t n)
 		panic("boot_alloc: Not enough memory\n");
 	}
 
-result = nextfree;
-nextfree = ROUNDUP(KADDR(last), PGSIZE);
-return result;
+	result = nextfree;
+	nextfree = ROUNDUP(KADDR(last), PGSIZE);
+	return result;
 }
 
 // Set up a two-level page table:
