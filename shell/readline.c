@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include "defs.h"
 #include "readline.h"
 
@@ -11,8 +13,10 @@ read_line(const char *prompt)
 	int i = 0, c = 0;
 
 #ifndef SHELL_NO_INTERACTIVE
-	fprintf(stdout, "%s %s %s\n", COLOR_RED, prompt, COLOR_RESET);
-	fprintf(stdout, "%s", "$ ");
+	if (isatty(1)) {
+		fprintf(stdout, "%s %s %s\n", COLOR_RED, prompt, COLOR_RESET);
+		fprintf(stdout, "%s", "$ ");
+	}
 #endif
 
 	memset(buffer, 0, BUFLEN);
