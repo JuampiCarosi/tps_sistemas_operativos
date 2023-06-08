@@ -13,7 +13,7 @@
 static int
 fisopfs_getattr(const char *path, struct stat *st)
 {
-	printf("[debug] fisopfs_getattr(%s)\n", path);
+	printf("[debug] fisopfs_getattr - path: %s\n", path);
 
 	if (strcmp(path, "/") == 0) {
 		st->st_uid = 1717;
@@ -38,7 +38,7 @@ fisopfs_readdir(const char *path,
                 off_t offset,
                 struct fuse_file_info *fi)
 {
-	printf("[debug] fisopfs_readdir(%s)", path);
+	printf("[debug] fisopfs_readdir - path: %s\n", path);
 
 	// Los directorios '.' y '..'
 	filler(buffer, ".", NULL, 0);
@@ -53,7 +53,7 @@ fisopfs_readdir(const char *path,
 	return -ENOENT;
 }
 
-#define MAX_CONTENIDO
+#define MAX_CONTENIDO 100
 static char fisop_file_contenidos[MAX_CONTENIDO] = "hola fisopfs!\n";
 
 static int
@@ -63,12 +63,14 @@ fisopfs_read(const char *path,
              off_t offset,
              struct fuse_file_info *fi)
 {
-	printf("[debug] fisopfs_read(%s, %lu, %lu)\n", path, offset, size);
+	printf("[debug] fisopfs_read - path: %s, offset: %lu, size: %lu\n",
+	       path,
+	       offset,
+	       size);
 
 	// Solo tenemos un archivo hardcodeado!
 	if (strcmp(path, "/fisop") != 0)
 		return -ENOENT;
-
 
 	if (offset + size > strlen(fisop_file_contenidos))
 		size = strlen(fisop_file_contenidos) - offset;
