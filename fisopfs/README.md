@@ -53,6 +53,16 @@ $ ls -al
 $ sudo umount prueba
 ```
 
+## Docker
+
+Existen tres _targets_ en el archivo `Makefile` para utilizar _docker_.
+
+- `docker-build`: genera la imagen basada en "Ubuntu 20.04" con las dependencias de FUSE
+- `docker-run`: crea un _container_ basado en la imagen anterior ejecutando `bash`
+   - acá se puede ejecutar `make` y luego `./fisopfs -f ./prueba`
+- `docker-attach`: permite vincularse al mismo _container_ anterior para poder realizar pruebas
+   - acá se puede ingresar al directorio `prueba`
+
 ## Linter
 
 ```bash
