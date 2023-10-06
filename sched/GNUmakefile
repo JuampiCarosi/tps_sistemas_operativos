@@ -154,7 +154,7 @@ QEMUOPTS += -smp $(CPUS)
 QEMUOPTS += $(QEMUEXTRA) -d guest_errors
 QEMUOPTS += -kernel $(KERNEL_IMAGE)
 
-gdb:
+gdb: $(IMAGES)
 	gdb -q -s obj/kern/kernel -ex 'target remote $(GDBSERV)' -n -x .gdbinit
 
 qemu: $(KERNEL_IMAGE)
