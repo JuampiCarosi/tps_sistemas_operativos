@@ -186,7 +186,7 @@ print-gdbport:
 
 # For deleting the build
 clean:
-	rm -rf $(OBJDIR) jos.in qemu.log
+	rm -rf $(OBJDIR) __pycache__ jos.in qemu.log
 
 realclean: clean
 	rm -rf lab$(LAB).tar.gz \
