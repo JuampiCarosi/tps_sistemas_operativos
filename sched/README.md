@@ -8,8 +8,26 @@ Utilizar el archivo `sched.md` provisto en el repositorio
 
 ## Compilar
 
+Por _default_ se compilará el _scheduler_ en versión **round-robin**.
+
 ```bash
 make
+```
+
+## Compilación condicional de _schedulers_
+
+Para compilar y probar el kernel y poder probar ambos planificadores, se puede:
+
+- **round-robin**:
+
+```bash
+make <target> USE_RR=1
+```
+
+- **priorities**:
+
+```bash
+make <target> USE_PR=1
 ```
 
 ## Pruebas

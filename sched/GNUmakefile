@@ -100,6 +100,17 @@ CFLAGS += -fno-tree-ch
 # Add -fno-stack-protector if the option exists.
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
+USE_RR =
+USE_PR =
+
+ifeq ($(USE_RR), 1)
+CFLAGS += -DSCHED_ROUND_ROBIN
+else ifeq ($(USE_PR), 1)
+CFLAGS += -DSCHED_PRIORITIES
+else
+CFLAGS += -DSCHED_ROUND_ROBIN
+endif
+
 # Common linker flags
 LDFLAGS := -m elf_i386
 

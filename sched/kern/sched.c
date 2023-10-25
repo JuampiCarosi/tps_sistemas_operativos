@@ -11,13 +11,12 @@ void sched_halt(void);
 void
 sched_yield(void)
 {
-	struct Env *idle;
-
+#ifdef SCHED_ROUND_ROBIN
 	// Implement simple round-robin scheduling.
 	//
 	// Search through 'envs' for an ENV_RUNNABLE environment in
 	// circular fashion starting just after the env this CPU was
-	// last running.  Switch to the first such environment found.
+	// last running. Switch to the first such environment found.
 	//
 	// If no envs are runnable, but the environment previously
 	// running on this CPU is still ENV_RUNNING, it's okay to
@@ -28,8 +27,22 @@ sched_yield(void)
 	// no runnable environments, simply drop through to the code
 	// below to halt the cpu.
 
-	// Your code here
-	// Wihtout scheduler, keep runing the last environment while it exists
+	// Your code here - Round robin
+#endif
+
+#ifdef SCHED_PRIORITIES
+	// Implement simple priorities scheduling.
+	//
+	// Environments now have a "priority" so it must be consider
+	// when the selection is performed.
+	//
+	// Be careful to not fall in "starvation" such that only one
+	// environment is selected and run every time.
+
+	// Your code here - Priorities
+#endif
+
+	// Without scheduler, keep runing the last environment while it exists
 	if (curenv) {
 		env_run(curenv);
 	}
