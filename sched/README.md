@@ -36,6 +36,18 @@ make <target> USE_PR=1
 make grade
 ```
 
+## Docker
+
+Se provee un _script_ `dock` que permite ejecutar los siguientes comandos:
+
+- **build**: genera la imagen del proyecto usando el `Dockerfile` provisto
+- **run**: genera un _container_ a partir de la imagen anterior y lo corre
+- **exec**: permite abrir una nueva _shell_ en el _container_ anterior
+
+Dentro del _container_ se pueden ejecutar todos los comandos provistos por el `GNUmakefile` como `make grade` o `make qemu-nox`.
+
+El _container_ utiliza [mount volumes](https://docs.docker.com/storage/volumes/) con lo cual los cambios que se realicen por fuera del mismo, serán visibles de forma automática.
+
 ## Linter
 
 ```bash
