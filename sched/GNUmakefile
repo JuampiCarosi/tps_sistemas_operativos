@@ -150,7 +150,7 @@ CPUS ?= 1
 QEMUOPTS = -serial mon:stdio -gdb tcp:$(GDBSERV)
 QEMUOPTS += $(shell if $(QEMU) -nographic -help | grep -q '^-D '; then echo '-D qemu.log'; fi)
 KERNEL_IMAGE = $(OBJDIR)/kern/kernel
-QEMUOPTS += -smp $(CPUS)
+QEMUOPTS += -smp $(CPUS),sockets=$(CPUS),cores=1
 QEMUOPTS += $(QEMUEXTRA) -d guest_errors
 QEMUOPTS += -kernel $(KERNEL_IMAGE)
 
