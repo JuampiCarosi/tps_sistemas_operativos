@@ -20,6 +20,7 @@ docker-build:
 
 docker-run:
 	docker container run -it --rm --name=fisopfs \
+		-v $(shell pwd):/fisopfs \
 		--device /dev/fuse \
 		--cap-add SYS_ADMIN \
 		--security-opt apparmor:unconfined \

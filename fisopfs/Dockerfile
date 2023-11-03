@@ -9,6 +9,4 @@ RUN apt-get -y install \
 	libbsd-dev libc6-dev gcc-multilib linux-libc-dev \
 	pkg-config libfuse2 libfuse-dev
 
-COPY . ./fisopfs
-
 WORKDIR /fisopfs
