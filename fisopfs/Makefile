@@ -18,7 +18,7 @@ format: .clang-files .clang-format
 docker-build:
 	docker build -t fisopfs:latest .
 
-docker-run: docker-build
+docker-run:
 	docker container run -it --rm --name=fisopfs \
 		--device /dev/fuse \
 		--cap-add SYS_ADMIN \
@@ -26,7 +26,7 @@ docker-run: docker-build
 		fisopfs:latest \
 		bash 
 
-docker-attach: docker-build
+docker-attach:
 	docker exec -it fisopfs bash
 
 clean:
