@@ -19,3 +19,4 @@ sh.c
 types.h
 utils.c
 utils.h
+tests/reflector.c

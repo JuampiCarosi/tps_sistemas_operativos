@@ -13,13 +13,13 @@ OBJS := $(SRCS:%.c=%.o)
 
 all: $(EXEC)
 
-run: $(EXEC)
-	./$(EXEC)
+$(EXEC): $(OBJS)
 
 valgrind: $(EXEC)
 	valgrind --leak-check=full --show-leak-kinds=all ./$(EXEC)
 
-$(EXEC): $(OBJS)
+test:
+	./tests/run
 
 format: .clang-files .clang-format
 	xargs -r clang-format -i <$<
@@ -27,4 +27,4 @@ format: .clang-files .clang-format
 clean:
 	rm -rf $(EXEC) *.o core vgcore.*
 
-.PHONY: all clean format run valgrind
+.PHONY: all clean format valgrind test
