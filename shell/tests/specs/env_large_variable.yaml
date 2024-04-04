@@ -1,5 +1,5 @@
 name: env_large_variable
-description: "Test that large variables are substituted properly"
+description: "large variables are substituted properly"
 command: |2
   bash -c "PRUEBA='$(seq -s ' ' 1000)' {shell_binary}"
 stdin: |2

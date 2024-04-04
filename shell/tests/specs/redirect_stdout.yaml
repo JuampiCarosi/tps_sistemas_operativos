@@ -1,5 +1,5 @@
 name: redirect_stdout
-description: "Tests that redirecting stdout works as expected"
+description: "redirect stdout works as expected"
 command: |2
   {shell_binary} >/dev/null 2>/dev/null; cat {tempdir}/redirect_stdout.txt
 stdin: |2

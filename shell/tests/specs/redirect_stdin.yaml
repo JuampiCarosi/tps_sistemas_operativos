@@ -1,5 +1,5 @@
 name: redirect_stdin
-description: "Tests that redirecting stdin works as expected"
+description: "redirect stdin works as expected"
 command: |2
   {shell_binary} $(seq 5 >{tempdir}/redirect_stdin.txt)
 stdin: |2

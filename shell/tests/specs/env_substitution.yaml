@@ -1,5 +1,5 @@
 name: env_substitution
-description: "Test simple variable substitution"
+description: "simple variable substitution"
 command: |2
   PRUEBA="probando" {shell_binary}
 stdin: |2

@@ -1,5 +1,5 @@
 name: simple_exit
-description: "Test exit built-in"
+description: "exit built-in"
 command: |2
   {shell_binary}
 stdin: |2

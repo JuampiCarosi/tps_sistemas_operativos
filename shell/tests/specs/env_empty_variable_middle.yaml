@@ -1,5 +1,5 @@
-name: env_empty_variable
-description: "Test that empty variables are not substituted"
+name: env_empty_middle_variable
+description: "empty middle variables are not substituted"
 command: |2
   PRUEBA= {shell_binary}
 stdin: |2

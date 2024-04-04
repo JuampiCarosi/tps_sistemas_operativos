@@ -1,5 +1,5 @@
 name: cd_basic
-description: "Tests that cd works correctly by checking pwd (no prompt)"
+description: "cd works correctly by checking pwd (no prompt)"
 command: |2
   sh -c "{shell_binary}"
 stdin: |2

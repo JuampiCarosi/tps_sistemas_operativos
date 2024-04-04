@@ -1,5 +1,5 @@
 name: pipes_wait_left_child
-description: "Tests that the shell properly waits to the left child"
+description: "shell properly waits for the left child"
 command: |2
   sh -c "/usr/bin/time -f %e {shell_binary} 2>&1| cut -d. -f1"
 stdin: |2

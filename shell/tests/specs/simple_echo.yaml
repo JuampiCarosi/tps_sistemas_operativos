@@ -1,5 +1,5 @@
 name: simple_echo
-description: "Test simple echo command"
+description: "simple echo command"
 command: |2
   {shell_binary}
 stdin: |2

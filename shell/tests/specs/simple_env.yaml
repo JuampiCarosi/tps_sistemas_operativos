@@ -1,5 +1,5 @@
 name: simple_env
-description: "Test simple env variable"
+description: "simple env variable"
 command: |2
   {shell_binary} | grep HELLO
 stdin: |2

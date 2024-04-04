@@ -1,5 +1,5 @@
 name: cd_back
-description: "Tests that cd . and cd .. works correctly by checking pwd (no prompt)"
+description: "cd . and cd .. work correctly by checking pwd (no prompt)"
 command: |2
   HOME=/home sh -c "{shell_binary}"
 stdin: |2

@@ -1,5 +1,5 @@
-name: env_unset_variable
-description: "Test that unset variables are not substituted"
+name: env_unset_middle_variable
+description: "unset middle variables are not substituted"
 command: |2
   {shell_binary}
 stdin: |2
