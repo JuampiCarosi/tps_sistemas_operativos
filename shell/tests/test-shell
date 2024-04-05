@@ -26,7 +26,6 @@ def compare_strings(current, expected):
         return message
     return None
 
-# TODO: move this into ShellTest class
 def launch_test(
     name,
     stdin=b'echo hi',
@@ -57,18 +56,8 @@ def launch_test(
         if msg:
             raise Exception("Check stderr failed: {}".format(msg))
 
-def substitude_vars(target: str, subs):
-    if not target:
-        return target
-
-    for subs_from, subs_to in subs:
-        target = target.replace(subs_from, subs_to)
-    return target
-
 class ShellTest():
     def __init__(self, filepath: str, sub_map):
-        # TODO: improve substitution (maybe don't do this here?)
-
         data = ""
         with open(filepath) as f:
             data = yaml.load(f, Loader=SafeLoader)
@@ -76,13 +65,21 @@ class ShellTest():
         self.name = data['name']
         self.description = data['description']
         self.command = data['command']
-        self.command = substitude_vars(self.command, sub_map)
+        self.command = self._substitude_vars(self.command, sub_map)
         self.stdin = data['stdin'] if 'stdin' in data else None
-        self.stdin = substitude_vars(self.stdin, sub_map)
+        self.stdin = self._substitude_vars(self.stdin, sub_map)
         self.expected_stdout = data['expected_stdout'] if 'expected_stdout' in data else None
-        self.expected_stdout = substitude_vars(self.expected_stdout, sub_map)
+        self.expected_stdout = self._substitude_vars(self.expected_stdout, sub_map)
         self.expected_stderr = data['expected_stderr'] if 'expected_stderr' in data else None
-        self.expected_stderr = substitude_vars(self.expected_stderr, sub_map)
+        self.expected_stderr = self._substitude_vars(self.expected_stderr, sub_map)
+
+    def _substitude_vars(self, target: str, subs):
+        if not target:
+            return target
+
+        for subs_from, subs_to in subs:
+            target = target.replace(subs_from, subs_to)
+        return target
 
     def run(self):
         launch_test(
@@ -95,26 +92,22 @@ class ShellTest():
             check_stderr=True
         )
 
-def run_tests(shell_binary: str, reflector_aux: str):
+def run_tests(shell_binary: str, reflector_binary: str, tests: list[str]):
     # This has to be an absolute path, since it will be invoked from the
     # shell-to-test and we cannot guarantee the home it will be running on.
-    tempdir=tempfile.mkdtemp(suffix='-shell-test')
+    tempdir = tempfile.mkdtemp(suffix='-shell-test')
 
-    print("Temporary files will be stored in: {}".format(tempdir))
+    print("=== Temporary files will be stored in: {} ===\n".format(tempdir))
 
     subs_map = [
         ('{shell_binary}', shell_binary),
         ('{tempdir}', tempdir),
-        ('{reflector}', reflector_aux),
+        ('{reflector}', reflector_binary),
     ]
-
-    # Reading tests from...
-    test_files_path = "./tests/specs"
-    tests = [join(test_files_path, f) for f in listdir(test_files_path) if isfile(join(test_files_path, f))]
 
     # Sort for consistent ordering
     tests.sort()
-    
+
     count = 1
     failed = 0
     total = len(tests)
@@ -123,9 +116,9 @@ def run_tests(shell_binary: str, reflector_aux: str):
         test = ShellTest(test_path, subs_map)
         try:
             test.run()
-            cprint("PASS {}/{}: {} ({})".format(count, total, test.description, test_path), "green")
+            cprint("PASS {}/{}: {} ({})".format(count, total, test.description, test.name), "green")
         except Exception as e:
-            cprint("FAIL {}/{}: {} ({}). Exception ocurred: {}".format(count, total, test.description, test_path, e), "red")
+            cprint("FAIL {}/{}: {} ({}). Exception ocurred: {}".format(count, total, test.description, test.name, e), "red")
             failed += 1
         finally:
             count += 1
@@ -133,6 +126,19 @@ def run_tests(shell_binary: str, reflector_aux: str):
     cprint("{} out of {} tests passed".format(total - failed, total), "yellow" if failed else "green")
 
     shutil.rmtree(tempdir)
+
+def run_all_tests(shell_binary: str, reflector_binary: str):
+    test_files_path = "./tests/specs"
+
+    tests = [join(test_files_path, f) for f in listdir(test_files_path) if isfile(join(test_files_path, f))]
+
+    run_tests(shell_binary, reflector_binary, tests)
+
+def run_single_test(shell_binary: str, reflector_binary: str, test_name: str):
+    test_path = "./tests/specs/{}.yaml".format(test_name)
+
+    run_tests(shell_binary, reflector_binary, [test_path])
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
@@ -142,5 +148,8 @@ if __name__ == "__main__":
     shell_binary = sys.argv[1]
     reflector_binary = sys.argv[2]
 
-    run_tests(shell_binary, reflector_binary)
+    if len(sys.argv) == 4:
+        run_single_test(shell_binary, reflector_binary, sys.argv[3])
+    else:
+        run_all_tests(shell_binary, reflector_binary)
 

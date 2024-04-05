@@ -21,6 +21,9 @@ valgrind: $(EXEC)
 test:
 	./tests/run
 
+test-%:
+	./tests/run $*
+
 format: .clang-files .clang-format
 	xargs -r clang-format -i <$<
 
