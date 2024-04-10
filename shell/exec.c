@@ -86,19 +86,23 @@ exec_cmd(struct cmd *cmd)
 
 	switch (cmd->type) {
 	case EXEC:
-		// spawns a command
-		//
-		// Your code here
-		printf("Commands are not yet implemented\n");
-		_exit(-1);
+		e = (struct execcmd *) cmd;
+		execvp(e->argv[0], e->argv);
+
 		break;
 
 	case BACK: {
-		// runs a command in background
-		//
-		// Your code here
-		printf("Background process are not yet implemented\n");
-		_exit(-1);
+		b = (struct backcmd *) cmd;
+
+		pid_t pid = fork();
+		if (pid == 0) {
+			exec_cmd(b->c);
+		} else {
+			waitpid(pid, NULL, WNOHANG);
+		}
+
+		exit(0);
+
 		break;
 	}
 
