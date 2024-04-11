@@ -113,21 +113,7 @@ exec_cmd(struct cmd *cmd)
 
 	case BACK: {
 		b = (struct backcmd *) cmd;
-
-		pid_t pid = fork();
-
-		if (pid < 0) {
-			printf_debug("Error in fork\n");
-			_exit(-1);
-		}
-
-		if (pid == 0) {
-			exec_cmd(b->c);
-		} else {
-			waitpid(pid, NULL, WNOHANG);
-		}
-
-		exit(0);
+		exec_cmd(b->c);
 
 		break;
 	}
