@@ -77,10 +77,91 @@ set_environ_vars(char **eargv, int eargc)
 static int
 open_redir_fd(char *file, int flags)
 {
-	// Your code here
+	int extra_flags = 0;
+	if (flags & O_CREAT) {
+		extra_flags = S_IWUSR | S_IRUSR;
+	}
 
-	return -1;
+	int fd = open(file, flags, extra_flags);
+
+	if (fd < 0) {
+		printf_debug("Error opening file %s\n", file);
+		exit(-1);
+	}
+
+	return fd;
 }
+
+
+void
+redirect_stdin(char *in_file)
+{
+	printf_debug("Redirecting stdin to '%s'\n", in_file);
+	if (strlen(in_file) > 0) {
+		int in_fd = open_redir_fd(in_file, O_RDONLY | O_CLOEXEC);
+
+		if (in_fd < 0) {
+			printf_debug("Error opening file %s\n", in_file);
+			exit(-1);
+		}
+		int result = dup2(in_fd, STDIN_FILENO);
+
+		if (result < 0) {
+			printf_debug("Error redirecting stdin\n");
+			close(in_fd);
+			exit(-1);
+		}
+
+		close(in_fd);
+	}
+}
+
+void
+redirect_stdout(char *out_file)
+{
+	if (strlen(out_file) > 0) {
+		int out_fd =
+		        open_redir_fd(out_file,
+		                      O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC);
+
+		if (out_fd < 0) {
+			printf_debug("Error opening file %s\n", out_file);
+			exit(-1);
+		}
+		int result = dup2(out_fd, STDOUT_FILENO);
+
+		if (result < 0) {
+			printf_debug("Error redirecting stdout\n");
+			close(out_fd);
+			exit(-1);
+		}
+		close(out_fd);
+	}
+}
+
+void
+redirect_stderr(char *err_file)
+{
+	if (strlen(err_file) > 0) {
+		int err_fd =
+		        open_redir_fd(err_file,
+		                      O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC);
+
+		if (err_fd < 0) {
+			printf_debug("Error opening file %s\n", err_file);
+			exit(-1);
+		}
+		int result = dup2(err_fd, STDERR_FILENO);
+
+		if (result < 0) {
+			printf_debug("Error redirecting stderr\n");
+			close(err_fd);
+			exit(-1);
+		}
+		close(err_fd);
+	}
+}
+
 
 // executes a command - does not return
 //
@@ -117,17 +198,18 @@ exec_cmd(struct cmd *cmd)
 
 		break;
 	}
-
 	case REDIR: {
-		// changes the input/output/stderr flow
-		//
-		// To check if a redirection has to be performed
-		// verify if file name's length (in the execcmd struct)
-		// is greater than zero
-		//
-		// Your code here
-		printf("Redirections are not yet implemented\n");
-		_exit(-1);
+		r = (struct execcmd *) cmd;
+
+
+		redirect_stdin(r->in_file);
+		redirect_stdout(r->out_file);
+		redirect_stderr(r->err_file);
+
+		r->type = EXEC;
+		exec_cmd((struct cmd *) r);
+
+
 		break;
 	}
 
