@@ -12,7 +12,7 @@ static void
 get_environ_key(char *arg, char *key)
 {
 	int i;
-	for (i = 0; arg[i] != '='; i++)
+	for (i = 0; arg[i] != EQUAL_CHAR; i++)
 		key[i] = arg[i];
 
 	key[i] = END_STRING;
@@ -48,7 +48,20 @@ get_environ_value(char *arg, char *value, int idx)
 static void
 set_environ_vars(char **eargv, int eargc)
 {
-	// Your code here
+	for (int i = 0; i < eargc; i++) {
+		int equal_index =
+		        block_contains(eargv[i],
+		                       EQUAL_CHAR);  // Get argument '=' index
+
+		if (equal_index >= 0) {
+			char arg_key[BUFLEN];
+			char arg_value[BUFLEN];
+
+			get_environ_key(eargv[i], arg_key);
+			get_environ_value(eargv[i], arg_value, equal_index);
+			setenv(arg_key, arg_value, 1);
+		}
+	}
 }
 
 // opens the file in which the stdin/stdout/stderr
@@ -87,7 +100,14 @@ exec_cmd(struct cmd *cmd)
 	switch (cmd->type) {
 	case EXEC:
 		e = (struct execcmd *) cmd;
-		execvp(e->argv[0], e->argv);
+		set_environ_vars(e->eargv, e->eargc);
+
+		int execvp_result = execvp(e->argv[0], e->argv);
+
+		if (execvp_result < 0) {
+			printf_debug("Error executing execvp\n");
+			_exit(-1);
+		}
 
 		break;
 
@@ -95,6 +115,12 @@ exec_cmd(struct cmd *cmd)
 		b = (struct backcmd *) cmd;
 
 		pid_t pid = fork();
+
+		if (pid < 0) {
+			printf_debug("Error in fork\n");
+			_exit(-1);
+		}
+
 		if (pid == 0) {
 			exec_cmd(b->c);
 		} else {
