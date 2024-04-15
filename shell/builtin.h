@@ -2,6 +2,7 @@
 #define BUILTIN_H
 
 #include "defs.h"
+#include "utils.h"
 
 extern char prompt[PRMTLEN];
 

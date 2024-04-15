@@ -31,30 +31,33 @@ exit_shell(char *cmd)
 int
 cd(char *cmd)
 {
-	if (strstr(cmd, "cd")) {
-		char *cmd_tokens = strtok(cmd, " ");
-		char *directory = strtok(NULL, " ");
-
-		if (directory) {
-			if (chdir(directory) < 0) {
-				printf_debug("Error changing to %s\n", directory);
-			} else {
-				char *buffer = getcwd(NULL, 0);
-				snprintf(prompt, sizeof prompt, "(%s)", buffer);
-				free(buffer);
-			}
-		} else {
-			char *home = getenv(HOME);
-			if (chdir(home) < 0) {
-				printf_debug("Error changing to HOME");
-			} else {
-				snprintf(prompt, sizeof prompt, "(%s)", home);
-			}
-		}
-		return TRUE;
+	if (!strstr(cmd, "cd")) {
+		return FALSE;
 	}
-	return FALSE;
+
+	strtok(cmd, " ");
+	char *directory = strtok(NULL, " ");
+
+	if (directory) {
+		if (chdir(directory) < 0) {
+			printf_debug("Error changing to %s\n", directory);
+			exit(1);
+		}
+		char *buffer = getcwd(NULL, 0);
+		snprintf(prompt, sizeof prompt, "(%s)", buffer);
+		free(buffer);
+	} else {
+		char *home = getenv(HOME);
+		if (chdir(home) < 0) {
+			printf_debug("Error changing to HOME");
+			exit(1);
+		}
+		snprintf(prompt, sizeof prompt, "(%s)", home);
+	}
+
+	return TRUE;
 }
+
 
 // returns true if 'pwd' was invoked
 // in the command line
@@ -64,17 +67,18 @@ cd(char *cmd)
 int
 pwd(char *cmd)
 {
-	if (strcmp("pwd", cmd) == 0) {
-		char *buffer = getcwd(NULL, 0);
-		if (!buffer) {
-			printf_debug("Error getting current directory\n");
-			return TRUE;
-		}
-		printf_debug("%s\n", buffer);
-		free(buffer);
-		return TRUE;
+	if (strcmp("pwd", cmd) != 0) {
+		return FALSE;
 	}
-	return FALSE;
+
+	char *buffer = getcwd(NULL, 0);
+	if (!buffer) {
+		printf_debug("Error getting current directory\n");
+		exit(1);
+	}
+	printf_debug("%s\n", buffer);
+	free(buffer);
+	return TRUE;
 }
 
 // returns true if `history` was invoked
