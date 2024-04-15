@@ -143,22 +143,32 @@ void
 redirect_stderr(char *err_file)
 {
 	if (strlen(err_file) > 0) {
-		int err_fd =
-		        open_redir_fd(err_file,
-		                      O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC);
+		if (strcmp(err_file, "&1") == 0) {
+			int result = dup2(STDOUT_FILENO, STDERR_FILENO);
 
-		if (err_fd < 0) {
-			printf_debug("Error opening file %s\n", err_file);
-			exit(-1);
-		}
-		int result = dup2(err_fd, STDERR_FILENO);
+			if (result < 0) {
+				printf_debug(
+				        "Error redirecting stderr to stdout\n");
+				exit(-1);
+			}
+		} else {
+			int err_fd = open_redir_fd(err_file,
+			                           O_WRONLY | O_CREAT |
+			                                   O_CLOEXEC | O_TRUNC);
 
-		if (result < 0) {
-			printf_debug("Error redirecting stderr\n");
+			if (err_fd < 0) {
+				printf_debug("Error opening file %s\n", err_file);
+				exit(-1);
+			}
+			int result = dup2(err_fd, STDERR_FILENO);
+
+			if (result < 0) {
+				printf_debug("Error redirecting stderr\n");
+				close(err_fd);
+				exit(-1);
+			}
 			close(err_fd);
-			exit(-1);
 		}
-		close(err_fd);
 	}
 }
 
