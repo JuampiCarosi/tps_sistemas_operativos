@@ -32,9 +32,10 @@ int
 cd(char *cmd)
 {
 	if (strstr(cmd, "cd")) {
-		char *directory = split_line(cmd, ' ');
+		char *cmd_tokens = strtok(cmd, " ");
+		char *directory = strtok(NULL, " ");
 
-		if (directory[0] != '\0') {
+		if (directory) {
 			if (chdir(directory) < 0) {
 				printf_debug("Error changing to %s\n", directory);
 			} else {
@@ -45,7 +46,7 @@ cd(char *cmd)
 		} else {
 			char *home = getenv(HOME);
 			if (chdir(home) < 0) {
-				printf_debug("Error changing to %s\n", home);
+				printf_debug("Error changing to HOME");
 			} else {
 				snprintf(prompt, sizeof prompt, "(%s)", home);
 			}
