@@ -183,6 +183,10 @@ exec_cmd(struct cmd *cmd)
 		e = (struct execcmd *) cmd;
 		set_environ_vars(e->eargv, e->eargc);
 
+		if (e->argv[0] == NULL) {
+			break;
+		}
+
 		int execvp_result = execvp(e->argv[0], e->argv);
 
 		if (execvp_result < 0) {
@@ -224,4 +228,6 @@ exec_cmd(struct cmd *cmd)
 		break;
 	}
 	}
+
+	exit(0);
 }

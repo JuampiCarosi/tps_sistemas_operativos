@@ -5,6 +5,7 @@
 #include "types.h"
 #include "createcmd.h"
 #include "utils.h"
+#include "printstatus.h"
 
 struct cmd *parse_line(char *b);
 

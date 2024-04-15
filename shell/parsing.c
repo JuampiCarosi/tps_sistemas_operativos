@@ -101,7 +101,24 @@ parse_environ_var(struct execcmd *c, char *arg)
 static char *
 expand_environ_var(char *arg)
 {
-	// Your code here
+	if (arg[0] != '$' || strlen(arg) == 1)
+		return arg;
+
+	if (strcmp(arg, "$?") == 0) {
+		sprintf(arg, "%i", status);
+		return arg;
+	}
+
+	char *key = arg + 1;
+	char *value = getenv(key);
+	if (!value) {
+		value = "";
+	}
+
+	if (strlen(value) > strlen(arg)) {
+		arg = (char *) realloc(arg, strlen(value) + 1);
+	}
+	strcpy(arg, value);
 
 	return arg;
 }
@@ -134,7 +151,9 @@ parse_exec(char *buf_cmd)
 
 		tok = expand_environ_var(tok);
 
-		c->argv[argc++] = tok;
+		if (strlen(tok) > 0) {
+			c->argv[argc++] = tok;
+		}
 	}
 
 	c->argv[argc] = (char *) NULL;
