@@ -201,14 +201,12 @@ exec_cmd(struct cmd *cmd)
 	case REDIR: {
 		r = (struct execcmd *) cmd;
 
-
 		redirect_stdin(r->in_file);
 		redirect_stdout(r->out_file);
 		redirect_stderr(r->err_file);
 
 		r->type = EXEC;
 		exec_cmd((struct cmd *) r);
-
 
 		break;
 	}

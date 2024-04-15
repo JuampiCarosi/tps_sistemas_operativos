@@ -1,4 +1,7 @@
 #include "builtin.h"
+#define TRUE 1
+#define FALSE 0
+#define HOME "HOME"
 
 // returns true if the 'exit' call
 // should be performed
@@ -7,9 +10,10 @@
 int
 exit_shell(char *cmd)
 {
-	// Your code here
+	if (strcmp(cmd, "exit") == 0)
+		return TRUE;
 
-	return 0;
+	return FALSE;
 }
 
 // returns true if "chdir" was performed
@@ -27,9 +31,28 @@ exit_shell(char *cmd)
 int
 cd(char *cmd)
 {
-	// Your code here
+	if (strstr(cmd, "cd")) {
+		char *directory = split_line(cmd, ' ');
 
-	return 0;
+		if (directory[0] != '\0') {
+			if (chdir(directory) < 0) {
+				printf_debug("Error changing to %s\n", directory);
+			} else {
+				char *buffer = getcwd(NULL, 0);
+				snprintf(prompt, sizeof prompt, "(%s)", buffer);
+				free(buffer);
+			}
+		} else {
+			char *home = getenv(HOME);
+			if (chdir(home) < 0) {
+				printf_debug("Error changing to %s\n", home);
+			} else {
+				snprintf(prompt, sizeof prompt, "(%s)", home);
+			}
+		}
+		return TRUE;
+	}
+	return FALSE;
 }
 
 // returns true if 'pwd' was invoked
@@ -40,9 +63,17 @@ cd(char *cmd)
 int
 pwd(char *cmd)
 {
-	// Your code here
-
-	return 0;
+	if (strcmp("pwd", cmd) == 0) {
+		char *buffer = getcwd(NULL, 0);
+		if (!buffer) {
+			printf_debug("Error getting current directory\n");
+			return TRUE;
+		}
+		printf_debug("%s\n", buffer);
+		free(buffer);
+		return TRUE;
+	}
+	return FALSE;
 }
 
 // returns true if `history` was invoked
