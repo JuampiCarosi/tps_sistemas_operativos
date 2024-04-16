@@ -92,11 +92,20 @@ open_redir_fd(char *file, int flags)
 	return fd;
 }
 
+int
+check_syscall(int syscall_result, char *message)
+{
+	if (syscall_result < 0) {
+		printf_debug("%s", message);
+		exit(-1);
+	}
+	return syscall_result;
+}
+
 
 void
 redirect_stdin(char *in_file)
 {
-	printf_debug("Redirecting stdin to '%s'\n", in_file);
 	if (strlen(in_file) > 0) {
 		int in_fd = open_redir_fd(in_file, O_RDONLY | O_CLOEXEC);
 
@@ -112,22 +121,22 @@ redirect_stdin(char *in_file)
 	}
 }
 
-// dup2 wrapper
-void
-wrapper_dup2(int fd, int flow)
-{
-	if (fd > 0) {
-		if (dup2(fd, flow) < 0) {
-			perror("dup2");
-			printf_debug("Exiting now...");
-			_exit(-1);
-		};
-		return;
-	}
-	perror("fd < 0 in dup2");
-	printf_debug("Exiting now...");
-	_exit(-1);
-}
+// // dup2 wrapper
+// void
+// wrapper_dup2(int fd, int flow)
+// {
+// 	if (fd > 0) {
+// 		if (dup2(fd, flow) < 0) {
+// 			perror("dup2");
+// 			printf_debug("Exiting now...");
+// 			_exit(-1);
+// 		};
+// 		return;
+// 	}
+// 	perror("fd < 0 in dup2");
+// 	printf_debug("Exiting now...");
+// 	_exit(-1);
+// }
 
 void
 redirect_stdout(char *out_file)
@@ -139,12 +148,9 @@ redirect_stdout(char *out_file)
 
 		int result = dup2(out_fd, STDOUT_FILENO);
 
-		if (result < 0) {
-			printf_debug("Error redirecting stdout\n");
-			close(out_fd);
-			exit(-1);
-		}
 		close(out_fd);
+
+		check_syscall(result, "Error redirecting stdout\n");
 	}
 }
 
@@ -155,11 +161,8 @@ redirect_stderr(char *err_file)
 		if (strcmp(err_file, "&1") == 0) {
 			int result = dup2(STDOUT_FILENO, STDERR_FILENO);
 
-			if (result < 0) {
-				printf_debug(
-				        "Error redirecting stderr to stdout\n");
-				exit(-1);
-			}
+			check_syscall(result,
+			              "Error redirecting stderr to stdout\n");
 		} else {
 			int err_fd = open_redir_fd(err_file,
 			                           O_WRONLY | O_CREAT |
@@ -167,12 +170,8 @@ redirect_stderr(char *err_file)
 
 			int result = dup2(err_fd, STDERR_FILENO);
 
-			if (result < 0) {
-				printf_debug("Error redirecting stderr\n");
-				close(err_fd);
-				exit(-1);
-			}
 			close(err_fd);
+			check_syscall(result, "Error redirecting stderr\n");
 		}
 	}
 }
@@ -186,31 +185,17 @@ run_exec(struct execcmd *e)
 		return;
 	}
 
-	int execvp_result = execvp(e->argv[0], e->argv);
-
-	if (execvp_result < 0) {
-		printf_debug("Error executing execvp\n");
-		exit(-1);
-	}
+	int execvp_result = check_syscall(execvp(e->argv[0], e->argv),
+	                                  "Error executing execvp\n");
 }
 
 void
 run_pipe(struct pipecmd *p)
 {
 	int fildes[2];
-	int pipe_res = pipe(fildes);
+	int pipe_res = check_syscall(pipe(fildes), "Error creating a pipe\n");
 
-	if (pipe_res < 0) {
-		printf_debug("Error creating a pipe\n");
-		exit(-1);
-	}
-
-	pid_t left_pid = fork();
-
-	if (left_pid < 0) {
-		printf_debug("Error creating a new process\n");
-		exit(-1);
-	}
+	pid_t left_pid = check_syscall(fork(), "Error creating a new process\n");
 
 	if (left_pid == 0) {
 		close(fildes[READ]);
@@ -219,21 +204,16 @@ run_pipe(struct pipecmd *p)
 
 		close(fildes[WRITE]);
 
-		if (dup2_res < 0) {
-			printf_debug("Error duplicating an existing "
-			             "object descriptor\n");
-			exit(-1);
-		}
+		check_syscall(dup2_res,
+		              "Error duplicating an existing object "
+		              "descriptor\n");
 
 		exec_cmd(p->leftcmd);
 	}
 
 	pid_t right_pid = fork();
 
-	if (right_pid < 0) {
-		printf_debug("Error creating a new process\n");
-		exit(-1);
-	}
+	check_syscall(right_pid, "Error creating a new process\n");
 
 	if (right_pid == 0) {
 		close(fildes[WRITE]);
@@ -242,11 +222,9 @@ run_pipe(struct pipecmd *p)
 
 		close(fildes[READ]);
 
-		if (dup2_res < 0) {
-			printf_debug("Error duplicating an existing "
-			             "object descriptor\n");
-			exit(-1);
-		}
+		check_syscall(dup2_res,
+		              "Error duplicating an existing object "
+		              "descriptor\n");
 
 		exec_cmd(p->rightcmd);
 	}
@@ -302,8 +280,6 @@ exec_cmd(struct cmd *cmd)
 	case PIPE: {
 		p = (struct pipecmd *) cmd;
 		run_pipe(p);
-		// free the memory allocated
-		// for the pipe tree structure
 		free_command(parsed_pipe);
 
 		break;
