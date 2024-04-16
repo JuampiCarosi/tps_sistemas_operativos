@@ -207,8 +207,12 @@ parse_line(char *buf)
 
 	char *right = split_line(buf, '|');
 
+	if (block_contains(right, '|') < 0) {
+		r = parse_cmd(right);
+	} else {
+		r = parse_line(right);
+	}
 	l = parse_cmd(buf);
-	r = parse_cmd(right);
 
 	return pipe_cmd_create(l, r);
 }
