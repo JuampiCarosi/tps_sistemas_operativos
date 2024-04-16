@@ -116,6 +116,23 @@ redirect_stdin(char *in_file)
 	}
 }
 
+// dup2 wrapper
+void
+wrapper_dup2(int fd, int flow)
+{
+	if (fd > 0) {
+		if (dup2(fd, flow) < 0) {
+			perror("dup2");
+			printf_debug("Exiting now...");
+			_exit(-1);
+		};
+		return;
+	}
+	perror("fd < 0 in dup2");
+	printf_debug("Exiting now...");
+	_exit(-1);
+}
+
 void
 redirect_stdout(char *out_file)
 {
@@ -201,7 +218,7 @@ exec_cmd(struct cmd *cmd)
 
 		if (execvp_result < 0) {
 			printf_debug("Error executing execvp\n");
-			_exit(-1);
+			exit(-1);
 		}
 
 		break;
@@ -226,10 +243,66 @@ exec_cmd(struct cmd *cmd)
 	}
 
 	case PIPE: {
-		// pipes two commands
-		//
-		// Your code here
-		printf("Pipes are not yet implemented\n");
+		p = (struct pipecmd *) cmd;
+
+		int fildes[2];
+		int pipe_res = pipe(fildes);
+
+		if (pipe_res < 0) {
+			printf_debug("Error creating a pipe\n");
+			exit(-1);
+		}
+
+		pid_t left_pid = fork();
+
+		if (left_pid < 0) {
+			printf_debug("Error creating a new process\n");
+			exit(-1);
+		}
+
+		if (left_pid == 0) {
+			close(fildes[READ]);
+
+			int dup2_res = dup2(fildes[WRITE], STDOUT_FILENO);
+
+			close(fildes[WRITE]);
+
+			if (dup2_res < 0) {
+				printf_debug("Error duplicating an existing "
+				             "object descriptor\n");
+				exit(-1);
+			}
+
+			exec_cmd(p->leftcmd);
+		}
+
+		pid_t right_pid = fork();
+
+		if (right_pid < 0) {
+			printf_debug("Error creating a new process\n");
+			exit(-1);
+		}
+
+		if (right_pid == 0) {
+			close(fildes[WRITE]);
+
+			int dup2_res = dup2(fildes[READ], STDIN_FILENO);
+
+			close(fildes[READ]);
+
+			if (dup2_res < 0) {
+				printf_debug("Error duplicating an existing "
+				             "object descriptor\n");
+				exit(-1);
+			}
+
+			exec_cmd(p->rightcmd);
+		}
+
+		close(fildes[READ]);
+		close(fildes[WRITE]);
+		waitpid(left_pid, NULL, 0);
+		waitpid(right_pid, NULL, 0);
 
 		// free the memory allocated
 		// for the pipe tree structure
