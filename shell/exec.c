@@ -100,10 +100,6 @@ redirect_stdin(char *in_file)
 	if (strlen(in_file) > 0) {
 		int in_fd = open_redir_fd(in_file, O_RDONLY | O_CLOEXEC);
 
-		if (in_fd < 0) {
-			printf_debug("Error opening file %s\n", in_file);
-			exit(-1);
-		}
 		int result = dup2(in_fd, STDIN_FILENO);
 
 		if (result < 0) {
@@ -141,10 +137,6 @@ redirect_stdout(char *out_file)
 		        open_redir_fd(out_file,
 		                      O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC);
 
-		if (out_fd < 0) {
-			printf_debug("Error opening file %s\n", out_file);
-			exit(-1);
-		}
 		int result = dup2(out_fd, STDOUT_FILENO);
 
 		if (result < 0) {
@@ -173,10 +165,6 @@ redirect_stderr(char *err_file)
 			                           O_WRONLY | O_CREAT |
 			                                   O_CLOEXEC | O_TRUNC);
 
-			if (err_fd < 0) {
-				printf_debug("Error opening file %s\n", err_file);
-				exit(-1);
-			}
 			int result = dup2(err_fd, STDERR_FILENO);
 
 			if (result < 0) {
@@ -187,6 +175,86 @@ redirect_stderr(char *err_file)
 			close(err_fd);
 		}
 	}
+}
+
+void
+run_exec(struct execcmd *e)
+{
+	set_environ_vars(e->eargv, e->eargc);
+
+	if (e->argv[0] == NULL) {
+		return;
+	}
+
+	int execvp_result = execvp(e->argv[0], e->argv);
+
+	if (execvp_result < 0) {
+		printf_debug("Error executing execvp\n");
+		exit(-1);
+	}
+}
+
+void
+run_pipe(struct pipecmd *p)
+{
+	int fildes[2];
+	int pipe_res = pipe(fildes);
+
+	if (pipe_res < 0) {
+		printf_debug("Error creating a pipe\n");
+		exit(-1);
+	}
+
+	pid_t left_pid = fork();
+
+	if (left_pid < 0) {
+		printf_debug("Error creating a new process\n");
+		exit(-1);
+	}
+
+	if (left_pid == 0) {
+		close(fildes[READ]);
+
+		int dup2_res = dup2(fildes[WRITE], STDOUT_FILENO);
+
+		close(fildes[WRITE]);
+
+		if (dup2_res < 0) {
+			printf_debug("Error duplicating an existing "
+			             "object descriptor\n");
+			exit(-1);
+		}
+
+		exec_cmd(p->leftcmd);
+	}
+
+	pid_t right_pid = fork();
+
+	if (right_pid < 0) {
+		printf_debug("Error creating a new process\n");
+		exit(-1);
+	}
+
+	if (right_pid == 0) {
+		close(fildes[WRITE]);
+
+		int dup2_res = dup2(fildes[READ], STDIN_FILENO);
+
+		close(fildes[READ]);
+
+		if (dup2_res < 0) {
+			printf_debug("Error duplicating an existing "
+			             "object descriptor\n");
+			exit(-1);
+		}
+
+		exec_cmd(p->rightcmd);
+	}
+
+	close(fildes[READ]);
+	close(fildes[WRITE]);
+	waitpid(left_pid, NULL, 0);
+	waitpid(right_pid, NULL, 0);
 }
 
 
@@ -208,18 +276,7 @@ exec_cmd(struct cmd *cmd)
 	switch (cmd->type) {
 	case EXEC:
 		e = (struct execcmd *) cmd;
-		set_environ_vars(e->eargv, e->eargc);
-
-		if (e->argv[0] == NULL) {
-			break;
-		}
-
-		int execvp_result = execvp(e->argv[0], e->argv);
-
-		if (execvp_result < 0) {
-			printf_debug("Error executing execvp\n");
-			exit(-1);
-		}
+		run_exec(e);
 
 		break;
 
@@ -244,66 +301,7 @@ exec_cmd(struct cmd *cmd)
 
 	case PIPE: {
 		p = (struct pipecmd *) cmd;
-
-		int fildes[2];
-		int pipe_res = pipe(fildes);
-
-		if (pipe_res < 0) {
-			printf_debug("Error creating a pipe\n");
-			exit(-1);
-		}
-
-		pid_t left_pid = fork();
-
-		if (left_pid < 0) {
-			printf_debug("Error creating a new process\n");
-			exit(-1);
-		}
-
-		if (left_pid == 0) {
-			close(fildes[READ]);
-
-			int dup2_res = dup2(fildes[WRITE], STDOUT_FILENO);
-
-			close(fildes[WRITE]);
-
-			if (dup2_res < 0) {
-				printf_debug("Error duplicating an existing "
-				             "object descriptor\n");
-				exit(-1);
-			}
-
-			exec_cmd(p->leftcmd);
-		}
-
-		pid_t right_pid = fork();
-
-		if (right_pid < 0) {
-			printf_debug("Error creating a new process\n");
-			exit(-1);
-		}
-
-		if (right_pid == 0) {
-			close(fildes[WRITE]);
-
-			int dup2_res = dup2(fildes[READ], STDIN_FILENO);
-
-			close(fildes[READ]);
-
-			if (dup2_res < 0) {
-				printf_debug("Error duplicating an existing "
-				             "object descriptor\n");
-				exit(-1);
-			}
-
-			exec_cmd(p->rightcmd);
-		}
-
-		close(fildes[READ]);
-		close(fildes[WRITE]);
-		waitpid(left_pid, NULL, 0);
-		waitpid(right_pid, NULL, 0);
-
+		run_pipe(p);
 		// free the memory allocated
 		// for the pipe tree structure
 		free_command(parsed_pipe);
