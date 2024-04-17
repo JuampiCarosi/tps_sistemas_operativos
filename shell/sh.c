@@ -35,7 +35,7 @@ setup_sigchild()
 {
 	struct sigaction sigchild_action = { .sa_handler = sigchild_handler,
 		                             .sa_flags = SA_NOCLDSTOP |
-		                                         SA_RESTART };
+		                                         SA_RESTART | SA_ONSTACK };
 
 	stack_t alternative_stack = { .ss_sp = malloc(SIGSTKSZ),
 		                      .ss_size = SIGSTKSZ,

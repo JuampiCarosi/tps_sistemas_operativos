@@ -171,6 +171,7 @@ run_pipe(struct pipecmd *p)
 	pid_t left_pid = check_syscall(fork(), "Error creating a new process\n");
 
 	if (left_pid == 0) {
+		setpgid(0, 0);
 		close(fildes[READ]);
 
 		int dup2_res = dup2(fildes[WRITE], STDOUT_FILENO);
@@ -189,6 +190,7 @@ run_pipe(struct pipecmd *p)
 	check_syscall(right_pid, "Error creating a new process\n");
 
 	if (right_pid == 0) {
+		setpgid(0, 0);
 		close(fildes[WRITE]);
 
 		int dup2_res = dup2(fildes[READ], STDIN_FILENO);
