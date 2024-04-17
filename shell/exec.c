@@ -64,6 +64,16 @@ set_environ_vars(char **eargv, int eargc)
 	}
 }
 
+int
+check_syscall(int syscall_result, char *message)
+{
+	if (syscall_result < 0) {
+		perror_debug(message);
+		exit(-1);
+	}
+	return syscall_result;
+}
+
 // opens the file in which the stdin/stdout/stderr
 // flow will be redirected, and returns
 // the file descriptor
@@ -87,17 +97,6 @@ open_redir_fd(char *file, int flags)
 
 	return fd;
 }
-
-int
-check_syscall(int syscall_result, char *message)
-{
-	if (syscall_result < 0) {
-		perror_debug(message);
-		exit(-1);
-	}
-	return syscall_result;
-}
-
 
 void
 redirect_stdin(char *in_file)
