@@ -5,7 +5,6 @@
 
 char prompt[PRMTLEN] = { 0 };
 
-
 void
 sigchild_handler()
 {
