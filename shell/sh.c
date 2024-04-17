@@ -15,10 +15,10 @@ sigchild_handler()
 	pid = waitpid(0, &status, WNOHANG);
 
 	if (pid > 0)
-		printf("Process %d exited with status %d\n", pid, status);
+		printf_debug("Process %d exited with status %d\n", pid, status);
 }
 
-void
+stack_t
 setup_sigchild()
 {
 	struct sigaction sigchild_action = { .sa_handler = sigchild_handler,
@@ -30,15 +30,22 @@ setup_sigchild()
 		                      .ss_flags = 0 };
 
 	if (alternative_stack.ss_sp == NULL) {
-		perror("malloc");
+		perror_debug("malloc for alt stack failed");
 		exit(-1);
 	}
 
-	if (sigaltstack(&alternative_stack, 0) < 0)
-		perror("sigaltstack");
+	if (sigaltstack(&alternative_stack, 0) < 0) {
+		perror_debug("stack change failed");
+		free(alternative_stack.ss_sp);
+		exit(-1);
+	};
+	if (sigaction(SIGCHLD, &sigchild_action, NULL) < 0) {
+		perror_debug("sigaction failed");
+		free(alternative_stack.ss_sp);
+		exit(-1);
+	}
 
-	if (sigaction(SIGCHLD, &sigchild_action, NULL) < 0)
-		perror("sigaction");
+	return alternative_stack;
 }
 
 // runs a shell command
@@ -46,10 +53,14 @@ static void
 run_shell()
 {
 	char *cmd;
+	stack_t alternative_stack = setup_sigchild();
 
 	while ((cmd = read_line(prompt)) != NULL)
-		if (run_cmd(cmd) == EXIT_SHELL)
+		if (run_cmd(cmd) == EXIT_SHELL) {
+			sigaltstack(NULL, &alternative_stack);
+			free(alternative_stack.ss_sp);
 			return;
+		}
 }
 
 // initializes the shell
@@ -68,7 +79,6 @@ init_shell()
 	}
 
 	setpgid(0, 0);
-	setup_sigchild();
 }
 
 int
