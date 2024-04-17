@@ -50,6 +50,18 @@ printf_debug(char *format, ...)
 }
 
 int
+perror_debug(char *msg)
+{
+#ifndef SHELL_NO_INTERACTIVE
+	if (isatty(STDERR_FILENO))
+		perror(msg);
+#endif
+
+	return 0;
+}
+
+
+int
 fprintf_debug(FILE *file, char *format, ...)
 {
 #ifndef SHELL_NO_INTERACTIVE

@@ -96,7 +96,7 @@ int
 check_syscall(int syscall_result, char *message)
 {
 	if (syscall_result < 0) {
-		printf_debug("%s", message);
+		perror_debug(message);
 		exit(-1);
 	}
 	return syscall_result;
@@ -120,23 +120,6 @@ redirect_stdin(char *in_file)
 		close(in_fd);
 	}
 }
-
-// // dup2 wrapper
-// void
-// wrapper_dup2(int fd, int flow)
-// {
-// 	if (fd > 0) {
-// 		if (dup2(fd, flow) < 0) {
-// 			perror("dup2");
-// 			printf_debug("Exiting now...");
-// 			_exit(-1);
-// 		};
-// 		return;
-// 	}
-// 	perror("fd < 0 in dup2");
-// 	printf_debug("Exiting now...");
-// 	_exit(-1);
-// }
 
 void
 redirect_stdout(char *out_file)
@@ -185,15 +168,14 @@ run_exec(struct execcmd *e)
 		return;
 	}
 
-	int execvp_result = check_syscall(execvp(e->argv[0], e->argv),
-	                                  "Error executing execvp\n");
+	check_syscall(execvp(e->argv[0], e->argv), "Error executing execvp\n");
 }
 
 void
 run_pipe(struct pipecmd *p)
 {
 	int fildes[2];
-	int pipe_res = check_syscall(pipe(fildes), "Error creating a pipe\n");
+	check_syscall(pipe(fildes), "Error creating a pipe\n");
 
 	pid_t left_pid = check_syscall(fork(), "Error creating a new process\n");
 
