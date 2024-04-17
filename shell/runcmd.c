@@ -42,6 +42,9 @@ run_cmd(char *cmd)
 		if (parsed->type == PIPE)
 			parsed_pipe = parsed;
 
+		if (parsed->type != BACK)
+			setpgid(0, 0);
+
 		exec_cmd(parsed);
 	}
 
