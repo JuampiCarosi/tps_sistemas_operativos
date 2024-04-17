@@ -6,6 +6,19 @@
 char prompt[PRMTLEN] = { 0 };
 
 void
+signal_safe_print_message(pid_t pid, int status)
+{
+	char buf[BUFLEN] = { 0 };
+
+	snprintf(buf,
+	         sizeof buf,
+	         "=====> Process %d exited with status %d\n",
+	         pid,
+	         status);
+	write(STDOUT_FILENO, buf, strlen(buf));
+}
+
+void
 sigchild_handler()
 {
 	pid_t pid;
@@ -14,7 +27,7 @@ sigchild_handler()
 	pid = waitpid(0, &status, WNOHANG);
 
 	if (pid > 0)
-		printf_debug("Process %d exited with status %d\n", pid, status);
+		signal_safe_print_message(pid, status);
 }
 
 stack_t
