@@ -95,5 +95,6 @@ restore_default_signal_status(int signal)
 		exit(-1);
 	}
 
-	free(stack.ss_sp);
+	if (stack.ss_sp != NULL)
+		free(stack.ss_sp);
 }
