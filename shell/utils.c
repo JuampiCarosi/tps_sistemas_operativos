@@ -75,3 +75,25 @@ fprintf_debug(FILE *file, char *format, ...)
 	return 0;
 #endif
 }
+
+void
+restore_default_signal_status(int signal)
+{
+	stack_t stack;
+	sigaltstack(NULL, &stack);
+
+	struct sigaction signal_action;
+
+	memset(&signal_action, 0, sizeof signal_action);
+	sigemptyset(&signal_action.sa_mask);
+
+	signal_action.sa_handler = SIG_DFL;
+	signal_action.sa_flags = 0;
+
+	if (sigaction(signal, &signal_action, NULL) == -1) {
+		perror_debug("restore sigaction failed");
+		exit(-1);
+	}
+
+	free(stack.ss_sp);
+}

@@ -45,10 +45,7 @@ run_cmd(char *cmd)
 		if (parsed->type != BACK)
 			setpgid(0, 0);
 
-		stack_t stack = { NULL };
-		sigaltstack(NULL, &stack);
-		free(stack.ss_sp);
-
+		restore_default_signal_status(SIGCHLD);
 		exec_cmd(parsed);
 	}
 

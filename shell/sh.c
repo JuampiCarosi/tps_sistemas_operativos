@@ -30,7 +30,7 @@ sigchild_handler()
 		signal_safe_print_message(pid, status);
 }
 
-stack_t
+void
 setup_sigchild()
 {
 	struct sigaction sigchild_action = { .sa_handler = sigchild_handler,
@@ -56,8 +56,6 @@ setup_sigchild()
 		free(alternative_stack.ss_sp);
 		exit(-1);
 	}
-
-	return alternative_stack;
 }
 
 // runs a shell command
@@ -65,12 +63,11 @@ static void
 run_shell()
 {
 	char *cmd;
-	stack_t alternative_stack = setup_sigchild();
+	setup_sigchild();
 
 	while ((cmd = read_line(prompt)) != NULL)
 		if (run_cmd(cmd) == EXIT_SHELL) {
-			sigaltstack(NULL, &alternative_stack);
-			free(alternative_stack.ss_sp);
+			restore_default_signal_status(SIGCHLD);
 			return;
 		}
 }
