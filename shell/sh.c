@@ -5,7 +5,7 @@
 
 char prompt[PRMTLEN] = { 0 };
 
-void
+static void
 signal_safe_print_message(pid_t pid, int status)
 {
 	char buf[BUFLEN] = { 0 };
@@ -18,7 +18,7 @@ signal_safe_print_message(pid_t pid, int status)
 	write(STDOUT_FILENO, buf, strlen(buf));
 }
 
-void
+static void
 sigchild_handler()
 {
 	pid_t pid;
@@ -30,7 +30,7 @@ sigchild_handler()
 		signal_safe_print_message(pid, status);
 }
 
-void
+static void
 setup_sigchild()
 {
 	struct sigaction sigchild_action = { .sa_handler = sigchild_handler,

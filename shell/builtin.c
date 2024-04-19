@@ -16,13 +16,13 @@ exit_shell(char *cmd)
 	return FALSE;
 }
 
-bool
+static bool
 is_whitespace(char c)
 {
 	return c == ' ' || c == '\t' || c == '\n';
 }
 
-char *
+static char *
 trim_whitespaces(char *str)
 {
 	while (is_whitespace(*str)) {
@@ -30,7 +30,6 @@ trim_whitespaces(char *str)
 	}
 
 	int n = strlen(str) - 1;
-	int i = 0;
 
 	while (n >= 0 && is_whitespace(str[n])) {
 		n--;

@@ -64,7 +64,7 @@ set_environ_vars(char **eargv, int eargc)
 	}
 }
 
-int
+static int
 check_syscall(int syscall_result, char *message)
 {
 	if (syscall_result < 0) {
@@ -98,7 +98,7 @@ open_redir_fd(char *file, int flags)
 	return fd;
 }
 
-void
+static void
 redirect_stdin(char *in_file)
 {
 	if (strlen(in_file) > 0) {
@@ -112,7 +112,7 @@ redirect_stdin(char *in_file)
 	}
 }
 
-void
+static void
 redirect_stdout(char *out_file)
 {
 	if (strlen(out_file) > 0) {
@@ -128,7 +128,7 @@ redirect_stdout(char *out_file)
 	}
 }
 
-void
+static void
 redirect_stderr(char *err_file)
 {
 	if (strlen(err_file) > 0) {
@@ -150,7 +150,7 @@ redirect_stderr(char *err_file)
 	}
 }
 
-void
+static void
 run_exec(struct execcmd *e)
 {
 	set_environ_vars(e->eargv, e->eargc);
@@ -162,7 +162,7 @@ run_exec(struct execcmd *e)
 	check_syscall(execvp(e->argv[0], e->argv), "Error executing execvp\n");
 }
 
-void
+static void
 run_pipe(struct pipecmd *p)
 {
 	int fildes[2];
