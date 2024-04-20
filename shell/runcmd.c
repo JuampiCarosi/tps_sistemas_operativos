@@ -61,7 +61,6 @@ run_cmd(char *cmd)
 	//
 	if (parsed->type == BACK) {
 		print_back_info(parsed);
-		waitpid(parsed->pid, &status, WNOHANG);
 	} else {
 		// waits for the process to finish
 		waitpid(parsed->pid, &status, 0);

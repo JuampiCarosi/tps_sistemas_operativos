@@ -77,6 +77,11 @@ cd(char *cmd)
 	strtok(cmd, " ");
 	char *directory = strtok(NULL, " ");
 
+	if (*directory == '$') {
+		directory++;
+		directory = getenv(directory);
+	}
+
 	if (directory) {
 		if (chdir(directory) < 0) {
 			printf_debug("Error changing to %s\n", directory);
