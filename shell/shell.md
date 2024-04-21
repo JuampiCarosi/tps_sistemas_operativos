@@ -62,7 +62,7 @@ La redirección ***2>&1*** es una técnica utilizada para dirigir la salida de e
 
 **Mostrar qué sucede con la salida de cat out.txt en el ejemplo.**
 
-[Ver imagen](https://hackmd.io/_uploads/rkGb8Mmb0.png)
+![Ver imagen 1](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%201.png)
 
 **Luego repetirlo, invirtiendo el orden de las redirecciones (es decir, ***2>&1 >out.txt***).**
 
