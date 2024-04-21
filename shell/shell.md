@@ -66,7 +66,7 @@ La redirección ***2>&1*** es una técnica utilizada para dirigir la salida de e
 
 **Luego repetirlo, invirtiendo el orden de las redirecciones (es decir, ***2>&1 >out.txt***).**
 
-[Ver imagen](https://hackmd.io/_uploads/Byp08GXbR.png)
+![Ver imagen 2](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%202.png)
 
 **¿Cambió algo?**
 
@@ -74,11 +74,11 @@ No, se puede ver cómo se produce el mismo resultado.
 
 **Compararlo con el comportamiento en bash(1).**
 
-[Ver imagen](https://hackmd.io/_uploads/SkHUvMQ-R.png)
+![Ver imagen 3](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%203.png)
 
 **Luego repetirlo, invirtiendo el orden de las redirecciones (es decir, ***2>&1 >out.txt***).**
 
-[Ver imagen](https://hackmd.io/_uploads/SJL3vfm-A.png)
+![Ver imagen 4](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%204.png)
 
 En este caso, inicialmente, el error se imprime en la consola porque el descriptor de archivo '1' aún está dirigido a la consola. Luego, se redirige la salida estándar al archivo **out.txt**, lo que resulta en la escritura del resultado del comando en dicho archivo.
 
@@ -94,25 +94,25 @@ En bash, para conocer el código de salida, se utiliza el comando ***echo $?***,
 
 Aquí se ve como se devuelve 0. Y se ejecuta el tercer comando.
 
-[Ver imagen](https://hackmd.io/_uploads/HyM5ufQZR.png)
+![Ver imagen 5](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%205.png)
 
 En este otro ejemplo, se ve como devuelve 0. Y se ejecuta el tercer comando.
 
-[Ver imagen](https://hackmd.io/_uploads/r18p_f7bA.png)
+![Ver imagen 6](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%206.png)
 
 En este otro ejemplo, Se ve como devuelve 127, ya que no se pudo ejecutar el tercer comando.
 
-[Ver imagen](https://hackmd.io/_uploads/S1BxYGmWR.png)
+![Ver imagen 7](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%207.png)
 
 Con nuestra implementación:
 
 Si el primer comando falla, se muestra el 0 del último comando ejecutado.
 
-[Ver imagen](https://hackmd.io/_uploads/H1FmYGQW0.png)
+![Ver imagen 8](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%208.png)
 
 Si el segundo comando falla, se muestra el 0 del ultimo comando ejecutado.
 
-[Ver imagen](https://hackmd.io/_uploads/ryRwFzmb0.png)
+![Ver imagen 9](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%209.png)
 
 Y si el tercer comando falla tambien muestra 0 ya que al esperar a sus hijos izquierdo y derecho, el proceso padre ejecuta ***exit(0)***. Dado que es el último proceso en ejecutarse, **echo $?** siempre devuelve 0.
 
@@ -144,21 +144,21 @@ Incluir un ejemplo de su uso en bash (u otra terminal similar).**
 
 **$0** - obtener el nombre del script actual: A pesar de que esta variable mágica sea más útil en bash scripts, en el contexto de una shell puede ser útil para saber que shell se está ejecutando ya que no es lo mismo si estamos usando bash, zsh o una custom. Un ejemplo útil podría ser un instalador de plugins de zsh, que confirme que estemos corriendo en un entorno de zsh.
 
-[Ver imagen](https://hackmd.io/_uploads/r1eYjfQb0.png)
+![Ver imagen 10](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%2010.png)
 
-[Ver imagen](https://hackmd.io/_uploads/Sk_iszXWR.png)
+![Ver imagen 11](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%2011.png)
 
 **$!** - obtener el PID del último proceso ejecutando en background: Muy útil cuando queremos identificar el último proceso en background (y no queremos subir a donde lo ejecutamos) para diferentes tareas como monitorear el proceso en el administrador de tareas o matar el proceso.
 
-[Ver imagen](https://hackmd.io/_uploads/H1dk2G7-0.png)
+![Ver imagen 12](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%2012.png)
 
 **$_**- listar el último argumento del comando anterior: Puede ser muy útil en casos donde el generar dinámicamente una cadena de texto para un comando y queremos utilizarla posteriormente, por ejemplo.
 
-[Ver imagen](https://hackmd.io/_uploads/ByYDnG7bA.png)
+![Ver imagen 13](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%2013.png)
 
 También es muy util para agilizar el uso de la terminal, simplemente creando un directorio con el nombre que queremos y luego accediendo al mismo.
 
-[Ver imagen](https://hackmd.io/_uploads/r17hnfmZ0.png)
+![Ver imagen 14](https://github.com/fiubatps/sisop_2024a_g25/blob/md/shell/images/Imagen%2014.png)
 
 
 
