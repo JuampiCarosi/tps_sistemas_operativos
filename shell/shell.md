@@ -132,8 +132,19 @@ Por lo tanto, para que sean temporales, solo se deben guardar en el proceso hijo
 ¿El comportamiento resultante es el mismo que en el primer caso? Explicar qué sucede y por qué.
 Describir brevemente (sin implementar) una posible implementación para que el comportamiento sea el mismo.**
 
+En el caso de la familia de funciones exec que terminan con la letra e, se les puede pasar un arreglo de strings con las variables de entorno temporales para la ejecución de ese proceso. En el otro caso, por ejemplo utilizando un execv(3), el nuevo proceso toma las variables de entorno del proceso padre. Esta información se puede observar en el siguiente fragmento del manual de linux (man 3 exec):
 
+```c
+e - execle(), execvpe()
+    The environment of the caller is specified via the argument envp.  The envp argument is an array  of  pointers
+    to null-terminated strings and must be terminated by a null pointer.
 
+    All  other  exec() functions (which do not include 'e' in the suffix) take the environment for the new process
+    image from the external variable environ in the calling process.
+```
+La función setenv(3) por un lado modifica las variables de entorno del proceso actual, permitiendo que estas variables sean accesibles por cualquier proceso hijo que se cree. Por otro lado, si se pasan las variables de entorno como un arreglo de strings en el tercer argumento de una de las funciones de exec(3) terminadas en e, estas variables de entorno solo estas serán accesibles por el proceso donde se ejecuta la función exec(3) ignorando las variables de entorno del proceso padre. Por lo tanto, el comportamiento resultante no es el mismo en ambos casos.
+
+Para poder replicar este comportamiento, crear un vector de strings con las variables de entorno temporales a agregar más las variables de entorno del proceso padre, y luego pasar este vector como argumento en el tercer argumento de la función exec(3) que se utilice. Los strings que representan las variables de entorno irían de la siguiente manera "variable=valor" y este mismo vector terminaría con un puntero nulo. Finalmente, ejecutamos la función exec(3) con estos parámetros.
 
 ---
 
