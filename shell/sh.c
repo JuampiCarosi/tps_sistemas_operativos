@@ -63,7 +63,6 @@ static void
 run_shell()
 {
 	char *cmd;
-	setup_sigchild();
 
 	while ((cmd = read_line(prompt)) != NULL)
 		if (run_cmd(cmd) == EXIT_SHELL) {
@@ -88,6 +87,7 @@ init_shell()
 	}
 
 	setpgid(0, 0);
+	setup_sigchild();
 }
 
 int
