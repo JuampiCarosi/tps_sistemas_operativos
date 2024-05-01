@@ -77,7 +77,7 @@ fisopfs_read(const char *path,
 
 	size = size > 0 ? size : 0;
 
-	strncpy(buffer, fisop_file_contenidos + offset, size);
+	memcpy(buffer, fisop_file_contenidos + offset, size);
 
 	return size;
 }
