@@ -28,6 +28,24 @@ sched_yield(void)
 	// below to halt the cpu.
 
 	// Your code here - Round robin
+
+	struct Env *next_free = NULL;
+	for (int i = 0; i < NENV; i++) {
+		if (envs[i].env_status == ENV_RUNNABLE) {
+			next_free = envs + i;
+			break;
+		}
+	}
+
+	while (next_free) {
+		if (next_free->env_status == ENV_RUNNING) {
+			continue;
+		}
+		if (next_free->env_status == ENV_RUNNABLE) {
+			env_run(next_free);
+		}
+		next_free = next_free->env_link;
+	}
 #endif
 
 #ifdef SCHED_PRIORITIES
