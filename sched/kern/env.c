@@ -500,8 +500,8 @@ env_run(struct Env *e)
 		curenv->env_status = ENV_RUNNABLE;
 
 	curenv = e;
-	e->env_status = ENV_RUNNING;
-	e->env_runs++;
+	curenv->env_status = ENV_RUNNING;
+	curenv->env_runs++;
 
 	env_load_pgdir(e);
 
@@ -510,5 +510,5 @@ env_run(struct Env *e)
 	unlock_kernel();
 	curenv->env_cpunum = cpunum();
 
-	context_switch(&e->env_tf);
+	context_switch(&curenv->env_tf);
 }

@@ -27,43 +27,45 @@ sched_yield(void)
 	// no runnable environments, simply drop through to the code
 	// below to halt the cpu.
 
-	// Your code here - Round robin
+	// Your code here
+	// Wihtout scheduler, keep runing the last environment while it exists
 
-	struct Env *next_free = NULL;
+	struct Env *next_env = curenv;
+	int start_index = next_env ? ENVX(next_env->env_id) + 1 : 0;
+
 	for (int i = 0; i < NENV; i++) {
-		if (envs[i].env_status == ENV_RUNNABLE) {
-			next_free = envs + i;
-			break;
+		int actual_index = (start_index + i) % NENV;
+		next_env = &envs[actual_index];
+
+		if (next_env->env_status == ENV_RUNNABLE) {
+			env_run(next_env);
 		}
 	}
 
-	while (next_free) {
-		if (next_free->env_status == ENV_RUNNING) {
-			continue;
-		}
-		if (next_free->env_status == ENV_RUNNABLE) {
-			env_run(next_free);
-		}
-		next_free = next_free->env_link;
+	if (curenv && curenv->env_status == ENV_RUNNING) {
+		env_run(curenv);
 	}
+
 #endif
 
 #ifdef SCHED_PRIORITIES
 	// Implement simple priorities scheduling.
 	//
-	// Environments now have a "priority" so it must be consider
-	// when the selection is performed.
+	// Environments now have a "priority" so
+	// it must be consider when the
+	// selection is performed.
 	//
-	// Be careful to not fall in "starvation" such that only one
-	// environment is selected and run every time.
+	// Be careful to not fall in
+	// "starvation" such that only one
+	// environment is selected and run every
+	// time.
 
 	// Your code here - Priorities
 #endif
 
-	// Without scheduler, keep runing the last environment while it exists
-	if (curenv) {
-		env_run(curenv);
-	}
+	// Without scheduler, keep runing the last environment
+	// while it exists if (curenv) { 	env_run(curenv);
+	// }
 
 	// sched_halt never returns
 	sched_halt();
@@ -86,7 +88,8 @@ sched_halt(void)
 			break;
 	}
 	if (i == NENV) {
-		cprintf("No runnable environments in the system!\n");
+		cprintf("No runnable environments in the "
+		        "system!\n");
 		while (1)
 			monitor(NULL);
 	}
@@ -96,15 +99,15 @@ sched_halt(void)
 	lcr3(PADDR(kern_pgdir));
 
 	// Mark that this CPU is in the HALT state, so that when
-	// timer interupts come in, we know we should re-acquire the
-	// big kernel lock
+	// timer interupts come in, we know we should re-acquire
+	// the big kernel lock
 	xchg(&thiscpu->cpu_status, CPU_HALTED);
 
 	// Release the big kernel lock as if we were "leaving" the kernel
 	unlock_kernel();
 
-	// Once the scheduler has finishied it's work, print statistics on
-	// performance. Your code here
+	// Once the scheduler has finishied it's work, print
+	// statistics on performance. Your code here
 
 	// Reset stack pointer, enable interrupts and then halt.
 	asm volatile("movl $0, %%ebp\n"
