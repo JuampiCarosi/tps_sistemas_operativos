@@ -496,31 +496,19 @@ env_load_pgdir(struct Env *e)
 void
 env_run(struct Env *e)
 {
-	// Step 1: If this is a context switch (a new environment is running):
-	//	   1. Set the current environment (if any) back to
-	//	      ENV_RUNNABLE if it is ENV_RUNNING (think about
-	//	      what other states it can be in),
-	//	   2. Set 'curenv' to the new environment,
-	//	   3. Set its status to ENV_RUNNING,
-	//	   4. Update its 'env_runs' counter,
-	//	   5. Use env_load_pgdir() to switch to its address space.
+	if (curenv && curenv->env_status == ENV_RUNNING)
+		curenv->env_status = ENV_RUNNABLE;
 
-	// Hint: This function loads the new environment's state from
-	//	e->env_tf.  Go back through the code you wrote above
-	//	and make sure you have set the relevant parts of
-	//	e->env_tf to sensible values.
-	// Your code here
 	curenv = e;
+	e->env_status = ENV_RUNNING;
+	e->env_runs++;
+
+	env_load_pgdir(e);
 
 	// Needed if we run with multiple procesors
 	// Record the CPU we are running on for user-space debugging
 	unlock_kernel();
 	curenv->env_cpunum = cpunum();
 
-	// Step 2: Use context_switch() to restore the environment's
-	//	   registers and drop into user mode in the
-	//	   environment.
 	context_switch(&e->env_tf);
-
-	panic("env_run not yet implemented"); /* mostly to placate the compiler */
 }

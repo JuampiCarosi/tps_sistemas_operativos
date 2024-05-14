@@ -9,6 +9,14 @@
 
 .globl context_switch;
 context_switch:
+	add $4, %esp
+	mov (%esp), %esp
+	popal
 
+	pop %es
+	pop %ds
+	add $8, %esp
+
+	iret
 spin:
 	jmp spin
