@@ -429,6 +429,31 @@ sys_ipc_recv(void *dstva)
 	return 0;
 }
 
+static int
+sys_env_get_priority(envid_t envid)
+{
+	struct Env *env;
+	int r;
+	if ((r = envid2env(envid, &env, 0)))
+		return r;
+
+	return env->current_queue;
+}
+
+static int
+sys_env_set_priority(envid_t envid, int priority)
+{
+	struct Env *env;
+	int r;
+	if ((r = envid2env(envid, &env, 0)))
+		return -1;
+
+	sched_destroy_env(env->env_id);
+	sched_push_env(env->env_id, priority);
+	env->current_queue = priority;
+	return priority;
+}
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -464,6 +489,10 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_env_set_pgfault_upcall(a1, (void *) a2);
 	case SYS_yield:
 		sys_yield();  // No return
+	case SYS_get_priority:
+		return sys_env_get_priority(a1);
+	case SYS_set_priority:
+		return sys_env_set_priority(a1, a2);
 	default:
 		return -E_INVAL;
 	}
