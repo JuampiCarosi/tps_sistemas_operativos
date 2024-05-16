@@ -101,7 +101,7 @@ CFLAGS += -fno-tree-ch
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
 USE_RR =
-USE_PR =
+USE_PR = 1
 
 ifeq ($(USE_RR), 1)
 CFLAGS += -DSCHED_ROUND_ROBIN
