@@ -22,7 +22,8 @@ struct MLFQ_sched {
 };
 
 // This function does not return.
-void sched_yield(void) __attribute__((noreturn));
+void sched_destroy_env(envid_t env_id);
+void sched_yield(void);
 void sched_push_env(envid_t env_id, int queue);
 
 #endif  // !JOS_KERN_SCHED_H

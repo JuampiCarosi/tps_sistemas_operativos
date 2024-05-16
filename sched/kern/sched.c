@@ -40,6 +40,7 @@ sched_push_env(envid_t env_id, int queue)
 	}
 
 	int index = q->last % NENV;
+	envs[ENVX(env_id)].current_queue = queue > 3 ? 3 : queue;
 	q->envs[index] = env_id;
 	q->last++;
 }
@@ -63,6 +64,36 @@ sched_remove_env(struct MLFQ_queue *queue, int position)
 }
 
 void
+sched_destroy_env(envid_t env_id)
+{
+	struct Env *env = &envs[ENVX(env_id)];
+	int queue = env->current_queue;
+	struct MLFQ_queue *q = NULL;
+
+	switch (queue) {
+	case 0:
+		q = &mlfq_sched.q0;
+		break;
+	case 1:
+		q = &mlfq_sched.q1;
+		break;
+	case 2:
+		q = &mlfq_sched.q2;
+		break;
+	default:
+		q = &mlfq_sched.q3;
+		break;
+	}
+
+	for (int i = q->beginning; i < q->last; i++) {
+		if (q->envs[i % NENV] == env_id) {
+			sched_remove_env(q, i % NENV);
+			break;
+		}
+	}
+}
+
+void
 clean_queues()
 {
 	mlfq_sched.q0.beginning = 0;
@@ -80,6 +111,7 @@ boost_envs()
 {
 	clean_queues();
 	for (int i = 0; i < NENV; i++) {
+		envs[i].current_queue = 0;
 		sched_push_env(envs[i].env_id, 0);
 	}
 }
@@ -142,11 +174,6 @@ priority_MLFQ()
 	struct Env *curr_env = curenv;
 	struct MLFQ_queue *best_priority_queue = NULL;
 	int queue_number = get_best_priority(&best_priority_queue);
-	if (!best_priority_queue && curenv && curenv->env_status == ENV_RUNNING) {
-		env_run(curenv);
-	} else {
-		sched_halt();
-	}
 
 	int start_queue = best_priority_queue->beginning;
 	int last_queue = best_priority_queue->last;
@@ -161,6 +188,12 @@ priority_MLFQ()
 			env_run(next_env);
 		}
 	}
+
+	if (curenv && curenv->env_status == ENV_RUNNING) {
+		env_run(curenv);
+	} else {
+		sched_halt();
+	}
 }
 
 void
@@ -171,6 +204,12 @@ sched_yield(void)
 		boost_envs();
 		mlfq_sched.total_executions = 0;
 	}
+	// printea las colas
+	cprintf("Q0: %d, Q1: %d, Q2: %d, Q3: %d\n",
+	        mlfq_sched.q0.last - mlfq_sched.q0.beginning,
+	        mlfq_sched.q1.last - mlfq_sched.q1.beginning,
+	        mlfq_sched.q2.last - mlfq_sched.q2.beginning,
+	        mlfq_sched.q3.last - mlfq_sched.q3.beginning);
 
 #ifdef SCHED_ROUND_ROBIN
 	// Implement simple round-robin scheduling.

@@ -260,6 +260,7 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 	// commit the allocation
 	env_free_list = e->env_link;
 	*newenv_store = e;
+	sched_push_env(e->env_id, 0);
 
 	cprintf("[%08x] new env %08x\n", curenv ? curenv->env_id : 0, e->env_id);
 	return 0;
@@ -398,7 +399,6 @@ env_create(uint8_t *binary, enum EnvType type)
 
 	load_icode(env, binary);
 	env->env_type = type;
-	sched_push_env(env->env_id, 0);
 }
 
 //
@@ -464,6 +464,7 @@ env_destroy(struct Env *e)
 	// If e is currently running on other CPUs, we change its state to
 	// ENV_DYING. A zombie environment will be freed the next time
 	// it traps to the kernel.
+	sched_destroy_env(e->env_id);
 	if (e->env_status == ENV_RUNNING && curenv != e) {
 		e->env_status = ENV_DYING;
 		return;
