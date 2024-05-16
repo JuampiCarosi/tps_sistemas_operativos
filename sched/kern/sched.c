@@ -5,12 +5,62 @@
 #include <kern/pmap.h>
 #include <kern/monitor.h>
 
+#define MAX_MLFQ_EXECUTIONS 10
+
 void sched_halt(void);
 
 // Choose a user environment to run and run it.
+static sched_runs;
+
+struct MLFQ_queue {
+	envid_t envs[NENV];
+	int size;
+	int beginning;
+};
+struct MLFQ_sched {
+	struct MLFQ_queue q0;
+	struct MLFQ_queue q1;
+	struct MLFQ_queue q2;
+	struct MLFQ_queue q3;
+	int total_executions;
+};
+
+struct MLFQ_sched mlfq_sched;
+
+void
+round_robin()
+{
+	struct Env *next_env = curenv;
+	int start_index = next_env ? ENVX(next_env->env_id) + 1 : 0;
+
+	for (int i = 0; i < NENV; i++) {
+		int actual_index = (start_index + i) % NENV;
+		next_env = &envs[actual_index];
+
+		if (next_env->env_status == ENV_RUNNABLE) {
+			env_run(next_env);
+		}
+	}
+
+	if (curenv && curenv->env_status == ENV_RUNNING) {
+		env_run(curenv);
+	}
+}
+
+void
+priority_MLFQ()
+{
+}
+
 void
 sched_yield(void)
 {
+	sched_runs++;
+	if (mlfq_sched.total_executions >= MAX_MLFQ_EXECUTIONS) {
+		boost();
+		mlfq_sched.total_executions = 0;
+	}
+
 #ifdef SCHED_ROUND_ROBIN
 	// Implement simple round-robin scheduling.
 	//
@@ -29,22 +79,7 @@ sched_yield(void)
 
 	// Your code here
 	// Wihtout scheduler, keep runing the last environment while it exists
-
-	struct Env *next_env = curenv;
-	int start_index = next_env ? ENVX(next_env->env_id) + 1 : 0;
-
-	for (int i = 0; i < NENV; i++) {
-		int actual_index = (start_index + i) % NENV;
-		next_env = &envs[actual_index];
-
-		if (next_env->env_status == ENV_RUNNABLE) {
-			env_run(next_env);
-		}
-	}
-
-	if (curenv && curenv->env_status == ENV_RUNNING) {
-		env_run(curenv);
-	}
+	round_robin();
 
 #endif
 
@@ -61,11 +96,8 @@ sched_yield(void)
 	// time.
 
 	// Your code here - Priorities
+	priority();
 #endif
-
-	// Without scheduler, keep runing the last environment
-	// while it exists if (curenv) { 	env_run(curenv);
-	// }
 
 	// sched_halt never returns
 	sched_halt();
