@@ -242,11 +242,11 @@ sched_yield(void)
 		mlfq_sched.total_executions = 0;
 	}
 	// printea las colas
-	cprintf("Q0: %d, Q1: %d, Q2: %d, Q3: %d\n",
-	        mlfq_sched.q0.last - mlfq_sched.q0.beginning,
-	        mlfq_sched.q1.last - mlfq_sched.q1.beginning,
-	        mlfq_sched.q2.last - mlfq_sched.q2.beginning,
-	        mlfq_sched.q3.last - mlfq_sched.q3.beginning);
+//	cprintf("Q0: %d, Q1: %d, Q2: %d, Q3: %d\n",
+//	        mlfq_sched.q0.last - mlfq_sched.q0.beginning,
+//	        mlfq_sched.q1.last - mlfq_sched.q1.beginning,
+//	        mlfq_sched.q2.last - mlfq_sched.q2.beginning,
+//	        mlfq_sched.q3.last - mlfq_sched.q3.beginning);
 
 #ifdef SCHED_ROUND_ROBIN
 	// Implement simple round-robin scheduling.
