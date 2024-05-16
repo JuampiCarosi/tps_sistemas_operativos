@@ -10,7 +10,7 @@
 void sched_halt(void);
 
 // Choose a user environment to run and run it.
-static sched_runs;
+static int sched_runs;
 
 struct MLFQ_queue {
 	envid_t envs[NENV];
@@ -57,7 +57,7 @@ sched_yield(void)
 {
 	sched_runs++;
 	if (mlfq_sched.total_executions >= MAX_MLFQ_EXECUTIONS) {
-		boost();
+		// boost();
 		mlfq_sched.total_executions = 0;
 	}
 
