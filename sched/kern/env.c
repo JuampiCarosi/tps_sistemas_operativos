@@ -468,7 +468,7 @@ env_destroy(struct Env *e)
 		e->env_status = ENV_DYING;
 		return;
 	}
-	sched_destroy_env(e->env_id);
+	// sched_destroy_env(e->env_id);
 
 	env_free(e);
 

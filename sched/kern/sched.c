@@ -145,24 +145,59 @@ is_empty(struct MLFQ_queue queue)
 int
 get_best_priority(struct MLFQ_queue **q)
 {
-	if (!is_empty(mlfq_sched.q0)) {
-		*q = &mlfq_sched.q0;
-		return 0;
+	// if (!is_empty(mlfq_sched.q0)) {
+	// 	*q = &mlfq_sched.q0;
+	// 	return 0;
+	// }
+
+	// if (!is_empty(mlfq_sched.q1)) {
+	// 	*q = &mlfq_sched.q1;
+	// 	return 1;
+	// }
+
+	// if (!is_empty(mlfq_sched.q2)) {
+	// 	*q = &mlfq_sched.q2;
+	// 	return 2;
+	// }
+
+	// if (!is_empty(mlfq_sched.q3)) {
+	// 	*q = &mlfq_sched.q3;
+	// 	return 3;
+	// }
+
+	// return -1;
+
+
+	for (int i = mlfq_sched.q0.beginning; i < mlfq_sched.q0.last; i++) {
+		if (envs[ENVX(mlfq_sched.q0.envs[i % NENV])].env_status ==
+		    ENV_RUNNABLE) {
+			*q = &mlfq_sched.q0;
+			return 0;
+		}
 	}
 
-	if (!is_empty(mlfq_sched.q1)) {
-		*q = &mlfq_sched.q1;
-		return 1;
+	for (int i = mlfq_sched.q1.beginning; i < mlfq_sched.q1.last; i++) {
+		if (envs[ENVX(mlfq_sched.q1.envs[i % NENV])].env_status ==
+		    ENV_RUNNABLE) {
+			*q = &mlfq_sched.q1;
+			return 1;
+		}
 	}
 
-	if (!is_empty(mlfq_sched.q2)) {
-		*q = &mlfq_sched.q2;
-		return 2;
+	for (int i = mlfq_sched.q2.beginning; i < mlfq_sched.q2.last; i++) {
+		if (envs[ENVX(mlfq_sched.q2.envs[i % NENV])].env_status ==
+		    ENV_RUNNABLE) {
+			*q = &mlfq_sched.q2;
+			return 2;
+		}
 	}
 
-	if (!is_empty(mlfq_sched.q3)) {
-		*q = &mlfq_sched.q3;
-		return 3;
+	for (int i = mlfq_sched.q3.beginning; i < mlfq_sched.q3.last; i++) {
+		if (envs[ENVX(mlfq_sched.q3.envs[i % NENV])].env_status ==
+		    ENV_RUNNABLE) {
+			*q = &mlfq_sched.q3;
+			return 3;
+		}
 	}
 
 	return -1;
@@ -174,6 +209,14 @@ priority_MLFQ()
 	struct Env *curr_env = curenv;
 	struct MLFQ_queue *best_priority_queue = NULL;
 	int queue_number = get_best_priority(&best_priority_queue);
+
+	if (!best_priority_queue) {
+		if (curenv && curenv->env_status == ENV_RUNNING) {
+			env_run(curenv);
+		} else {
+			sched_halt();
+		}
+	}
 
 	int start_queue = best_priority_queue->beginning;
 	int last_queue = best_priority_queue->last;
@@ -187,12 +230,6 @@ priority_MLFQ()
 			sched_push_env(next_env_id, queue_number + 1);
 			env_run(next_env);
 		}
-	}
-
-	if (curenv && curenv->env_status == ENV_RUNNING) {
-		env_run(curenv);
-	} else {
-		sched_halt();
 	}
 }
 
