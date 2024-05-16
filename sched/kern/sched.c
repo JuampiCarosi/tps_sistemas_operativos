@@ -20,24 +20,29 @@ struct MLFQ_sched mlfq_sched = {
 	.total_executions = 0,
 };
 
+struct MLFQ_queue *
+get_queue(int queue)
+{
+	if (queue < 0) {
+		return NULL;
+	}
+
+	switch (queue) {
+	case 0:
+		return &mlfq_sched.q0;
+	case 1:
+		return &mlfq_sched.q1;
+	case 2:
+		return &mlfq_sched.q2;
+	default:
+		return &mlfq_sched.q3;
+	}
+}
+
 void
 sched_push_env(envid_t env_id, int queue)
 {
-	struct MLFQ_queue *q = NULL;
-	switch (queue) {
-	case 0:
-		q = &mlfq_sched.q0;
-		break;
-	case 1:
-		q = &mlfq_sched.q1;
-		break;
-	case 2:
-		q = &mlfq_sched.q2;
-		break;
-	default:
-		q = &mlfq_sched.q3;
-		break;
-	}
+	struct MLFQ_queue *q = get_queue(queue);
 
 	int index = q->last % NENV;
 	envs[ENVX(env_id)].current_queue = queue > 3 ? 3 : queue;
@@ -68,22 +73,7 @@ sched_destroy_env(envid_t env_id)
 {
 	struct Env *env = &envs[ENVX(env_id)];
 	int queue = env->current_queue;
-	struct MLFQ_queue *q = NULL;
-
-	switch (queue) {
-	case 0:
-		q = &mlfq_sched.q0;
-		break;
-	case 1:
-		q = &mlfq_sched.q1;
-		break;
-	case 2:
-		q = &mlfq_sched.q2;
-		break;
-	default:
-		q = &mlfq_sched.q3;
-		break;
-	}
+	struct MLFQ_queue *q = get_queue(queue);
 
 	for (int i = q->beginning; i < q->last; i++) {
 		if (q->envs[i % NENV] == env_id) {
@@ -241,12 +231,6 @@ sched_yield(void)
 		boost_envs();
 		mlfq_sched.total_executions = 0;
 	}
-	// printea las colas
-//	cprintf("Q0: %d, Q1: %d, Q2: %d, Q3: %d\n",
-//	        mlfq_sched.q0.last - mlfq_sched.q0.beginning,
-//	        mlfq_sched.q1.last - mlfq_sched.q1.beginning,
-//	        mlfq_sched.q2.last - mlfq_sched.q2.beginning,
-//	        mlfq_sched.q3.last - mlfq_sched.q3.beginning);
 
 #ifdef SCHED_ROUND_ROBIN
 	// Implement simple round-robin scheduling.
