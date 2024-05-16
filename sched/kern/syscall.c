@@ -443,9 +443,19 @@ sys_env_get_priority(envid_t envid)
 static int
 sys_env_set_priority(envid_t envid, int priority)
 {
+	if (priority < 0 || priority > 3)
+		return -1;
+
 	struct Env *env;
 	int r;
 	if ((r = envid2env(envid, &env, 0)))
+		return -1;
+
+
+	if (env->current_queue == priority)
+		return priority;
+
+	if (env->current_queue > priority)
 		return -1;
 
 	sched_destroy_env(env->env_id);
