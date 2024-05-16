@@ -4,28 +4,85 @@
 #include <kern/env.h>
 #include <kern/pmap.h>
 #include <kern/monitor.h>
+#include <kern/sched.h>
 
 #define MAX_MLFQ_EXECUTIONS 10
 
 void sched_halt(void);
 
-// Choose a user environment to run and run it.
 static int sched_runs;
 
-struct MLFQ_queue {
-	envid_t envs[NENV];
-	int size;
-	int beginning;
-};
-struct MLFQ_sched {
-	struct MLFQ_queue q0;
-	struct MLFQ_queue q1;
-	struct MLFQ_queue q2;
-	struct MLFQ_queue q3;
-	int total_executions;
+struct MLFQ_sched mlfq_sched = {
+	.q0 = { .last = 0, .beginning = 0 },
+	.q1 = { .last = 0, .beginning = 0 },
+	.q2 = { .last = 0, .beginning = 0 },
+	.q3 = { .last = 0, .beginning = 0 },
+	.total_executions = 0,
 };
 
-struct MLFQ_sched mlfq_sched;
+void
+sched_push_env(envid_t env_id, int queue)
+{
+	struct MLFQ_queue *q = NULL;
+	switch (queue) {
+	case 0:
+		q = &mlfq_sched.q0;
+		break;
+	case 1:
+		q = &mlfq_sched.q1;
+		break;
+	case 2:
+		q = &mlfq_sched.q2;
+		break;
+	default:
+		q = &mlfq_sched.q3;
+		break;
+	}
+
+	int index = q->last % NENV;
+	q->envs[index] = env_id;
+	q->last++;
+}
+
+void
+sched_remove_env(struct MLFQ_queue *queue, int position)
+{
+	if (position == queue->beginning) {
+		queue->beginning++;
+		return;
+	}
+
+	envid_t first = queue->envs[queue->beginning % NENV];
+	envid_t target = queue->envs[position];
+
+	envid_t aux = first;
+	queue->envs[queue->beginning % NENV] = target;
+	queue->envs[position] = aux;
+
+	queue->beginning++;
+}
+
+void
+clean_queues()
+{
+	mlfq_sched.q0.beginning = 0;
+	mlfq_sched.q0.last = 0;
+	mlfq_sched.q1.beginning = 0;
+	mlfq_sched.q1.last = 0;
+	mlfq_sched.q2.beginning = 0;
+	mlfq_sched.q2.last = 0;
+	mlfq_sched.q3.beginning = 0;
+	mlfq_sched.q3.last = 0;
+}
+
+void
+boost_envs()
+{
+	clean_queues();
+	for (int i = 0; i < NENV; i++) {
+		sched_push_env(envs[i].env_id, 0);
+	}
+}
 
 void
 round_robin()
@@ -47,9 +104,63 @@ round_robin()
 	}
 }
 
+bool
+is_empty(struct MLFQ_queue queue)
+{
+	return (queue.beginning % NENV) == (queue.last % NENV);
+}
+
+int
+get_best_priority(struct MLFQ_queue **q)
+{
+	if (!is_empty(mlfq_sched.q0)) {
+		*q = &mlfq_sched.q0;
+		return 0;
+	}
+
+	if (!is_empty(mlfq_sched.q1)) {
+		*q = &mlfq_sched.q1;
+		return 1;
+	}
+
+	if (!is_empty(mlfq_sched.q2)) {
+		*q = &mlfq_sched.q2;
+		return 2;
+	}
+
+	if (!is_empty(mlfq_sched.q3)) {
+		*q = &mlfq_sched.q3;
+		return 3;
+	}
+
+	return -1;
+}
+
 void
 priority_MLFQ()
 {
+	struct Env *curr_env = curenv;
+	struct MLFQ_queue *best_priority_queue = NULL;
+	int queue_number = get_best_priority(&best_priority_queue);
+	if (!best_priority_queue && curenv && curenv->env_status == ENV_RUNNING) {
+		env_run(curenv);
+	} else {
+		sched_halt();
+	}
+
+	int start_queue = best_priority_queue->beginning;
+	int last_queue = best_priority_queue->last;
+
+	for (int i = start_queue; i < last_queue; i++) {
+		envid_t next_env_id = best_priority_queue->envs[i % NENV];
+		struct Env *next_env = &envs[ENVX(next_env_id)];
+
+		if (next_env->env_status == ENV_RUNNABLE) {
+			sched_remove_env(best_priority_queue, i % NENV);
+			sched_push_env(next_env_id, queue_number + 1);
+			env_run(next_env);
+		}
+	}
 }
 
 void
@@ -57,7 +168,7 @@ sched_yield(void)
 {
 	sched_runs++;
 	if (mlfq_sched.total_executions >= MAX_MLFQ_EXECUTIONS) {
-		// boost();
+		boost_envs();
 		mlfq_sched.total_executions = 0;
 	}
 
@@ -96,7 +207,7 @@ sched_yield(void)
 	// time.
 
 	// Your code here - Priorities
-	priority();
+	priority_MLFQ();
 #endif
 
 	// sched_halt never returns
