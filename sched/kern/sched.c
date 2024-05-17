@@ -6,7 +6,7 @@
 #include <kern/monitor.h>
 #include <kern/sched.h>
 
-#define MAX_MLFQ_EXECUTIONS 10
+#define MAX_MLFQ_EXECUTIONS 5
 
 void sched_halt(void);
 
@@ -86,8 +86,6 @@ sched_destroy_env(envid_t env_id)
 void
 clean_queues()
 {
-	mlfq_sched.q0.beginning = 0;
-	mlfq_sched.q0.last = 0;
 	mlfq_sched.q1.beginning = 0;
 	mlfq_sched.q1.last = 0;
 	mlfq_sched.q2.beginning = 0;
@@ -99,11 +97,21 @@ clean_queues()
 void
 boost_envs()
 {
-	clean_queues();
-	for (int i = 0; i < NENV; i++) {
-		envs[i].current_queue = 0;
-		sched_push_env(envs[i].env_id, 0);
+	for (int i = mlfq_sched.q1.beginning; i < mlfq_sched.q1.last; i++) {
+		envid_t env_id = mlfq_sched.q1.envs[i % NENV];
+		sched_push_env(env_id, 0);
 	}
+
+	for (int i = mlfq_sched.q2.beginning; i < mlfq_sched.q2.last; i++) {
+		envid_t env_id = mlfq_sched.q2.envs[i % NENV];
+		sched_push_env(env_id, 0);
+	}
+
+	for (int i = mlfq_sched.q3.beginning; i < mlfq_sched.q3.last; i++) {
+		envid_t env_id = mlfq_sched.q3.envs[i % NENV];
+		sched_push_env(env_id, 0);
+	}
+	clean_queues();
 }
 
 void
@@ -202,6 +210,7 @@ priority_MLFQ()
 
 	if (!best_priority_queue) {
 		if (curenv && curenv->env_status == ENV_RUNNING) {
+			mlfq_sched.total_executions++;
 			env_run(curenv);
 		} else {
 			sched_halt();
@@ -218,6 +227,7 @@ priority_MLFQ()
 		if (next_env->env_status == ENV_RUNNABLE) {
 			sched_remove_env(best_priority_queue, i % NENV);
 			sched_push_env(next_env_id, queue_number + 1);
+			mlfq_sched.total_executions++;
 			env_run(next_env);
 		}
 	}
@@ -272,6 +282,9 @@ sched_yield(void)
 
 	// sched_halt never returns
 	sched_halt();
+
+	// tis is mainly for the compiler
+	panic("should not return");
 }
 
 // Halt this CPU when there is nothing to do. Wait until the
