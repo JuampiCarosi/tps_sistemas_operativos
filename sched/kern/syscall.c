@@ -451,7 +451,6 @@ sys_env_set_priority(envid_t envid, int priority)
 	if ((r = envid2env(envid, &env, 0)))
 		return -1;
 
-
 	if (env->current_queue == priority)
 		return priority;
 
