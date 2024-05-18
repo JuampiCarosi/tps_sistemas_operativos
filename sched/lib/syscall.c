@@ -121,8 +121,9 @@ sys_get_priority(envid_t envid)
 
 
 // 1. fijarse si el envid sos vos (solo por env_ids con la funcion sys_getenvid())
+// 2. fijarse si el envid que te psaron es tu hijo (envid2env() para saber quien es el otro, ahi te fijas si es tu hijo))
 int
 sys_set_priority(envid_t envid, int priority)
 {
-	return syscall(SYS_set_priority, 0, envid, priority, 0, 0, 0);
+	return syscall(SYS_set_priority, 0, envid, priority, sys_getenvid(), 0, 0);
 }
