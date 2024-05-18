@@ -10,6 +10,6 @@ umain(int argc, char **argv)
 
 	if (fork_id == 0) {
 		int res = sys_set_priority(parent_envid, 3);
-		cprintf("Response: %d\n", res);
+		cprintf("Response to unauthorized set priority: %d\n", res);
 	}
 }
