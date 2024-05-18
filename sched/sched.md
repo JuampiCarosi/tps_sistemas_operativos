@@ -9,10 +9,8 @@ Primero pondremos un breakpoint en context_switch.
 Y avanzamos la ejecución hasta ese punto.
 ![Ver imagen 2](https://github.com/fiubatps/sisop_2024a_g25/blob/unoptimized_search/sched/images/parte_1_imagen_2.png)
 
-
 Vemos el estado del stack.
 ![Ver imagen 3](https://github.com/fiubatps/sisop_2024a_g25/blob/unoptimized_search/sched/images/parte_1_imagen_3.png)
-
 
 Avanzamos un paso y volvemos a ver el estado del stack.
 ![Ver imagen 4](https://github.com/fiubatps/sisop_2024a_g25/blob/unoptimized_search/sched/images/parte_1_imagen_4.png)
