@@ -46,9 +46,7 @@ sched_push_env(envid_t env_id, int queue)
 	struct MLFQ_queue *q = get_queue(queue);
 
 	int index = q->last % NENV;
-	int biggest_queue = MAX_QUEUES - 1;
-	envs[ENVX(env_id)].current_queue =
-	        queue > biggest_queue ? biggest_queue : queue;
+	envs[ENVX(env_id)].current_queue = queue;
 	q->envs[index] = env_id;
 	q->last++;
 }
@@ -193,7 +191,10 @@ priority_MLFQ()
 
 		if (next_env->env_status == ENV_RUNNABLE) {
 			sched_remove_env(best_priority_queue, i % NENV);
-			sched_push_env(next_env_id, queue_number + 1);
+			int new_queue_number = queue_number >= MAX_QUEUES - 1
+			                               ? MAX_QUEUES - 1
+			                               : queue_number + 1;
+			sched_push_env(next_env_id, new_queue_number);
 			mlfq_sched.total_executions++;
 			env_run(next_env);
 		}
