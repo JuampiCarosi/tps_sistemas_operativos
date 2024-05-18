@@ -11,6 +11,7 @@ user/spin.c
 user/yield.c
 user/getpriority.c
 user/unauthorizedsetpriority.c
+user/newpriority.c
 user/hello.c
 user/primes.c
 user/faultread.c
