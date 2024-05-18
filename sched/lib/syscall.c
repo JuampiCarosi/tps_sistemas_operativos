@@ -122,5 +122,5 @@ sys_get_priority(envid_t envid)
 int
 sys_set_priority(envid_t envid, int priority)
 {
-	return syscall(SYS_set_priority, 1, envid, priority, 0, 0, 0);
+	return syscall(SYS_set_priority, 0, envid, priority, 0, 0, 0);
 }
