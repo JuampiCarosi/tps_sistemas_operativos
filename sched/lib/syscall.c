@@ -119,6 +119,8 @@ sys_get_priority(envid_t envid)
 	return syscall(SYS_get_priority, 0, (uint32_t) envid, 0, 0, 0, 0);
 }
 
+
+// 1. fijarse si el envid sos vos (solo por env_ids con la funcion sys_getenvid())
 int
 sys_set_priority(envid_t envid, int priority)
 {
