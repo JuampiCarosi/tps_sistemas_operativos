@@ -441,16 +441,8 @@ sys_env_get_priority(envid_t envid)
 }
 
 static int
-sys_env_set_priority(envid_t envid, int priority, envid_t caller_id)
+sys_env_set_priority(envid_t envid, int priority)
 {
-	struct Env *parent_env;
-	int parent_r;
-	if ((parent_r = envid2env(envid, &parent_env, 0)))
-		return -1;
-
-	if (caller_id != envid && parent_env->env_parent_id != caller_id)
-		return -1;
-
 	if (priority < 0 || priority > 3)
 		return -1;
 
@@ -459,6 +451,9 @@ sys_env_set_priority(envid_t envid, int priority, envid_t caller_id)
 	if ((r = envid2env(envid, &env, 0)))
 		return -1;
 
+	if (env != curenv && env->env_parent_id != curenv->env_id) {
+		return -1;
+	}
 
 	if (env->current_queue == priority)
 		return priority;
@@ -510,7 +505,7 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 	case SYS_get_priority:
 		return sys_env_get_priority(a1);
 	case SYS_set_priority:
-		return sys_env_set_priority(a1, a2, a3);
+		return sys_env_set_priority(a1, a2);
 	default:
 		return -E_INVAL;
 	}
