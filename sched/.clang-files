@@ -10,7 +10,7 @@ user/spin0.c
 user/spin.c
 user/yield.c
 user/getpriority.c
-user/unauthorized-setpriority.c
+user/unauthorizedsetpriority.c
 user/hello.c
 user/primes.c
 user/faultread.c

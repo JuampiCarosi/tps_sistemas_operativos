@@ -82,7 +82,7 @@ KERN_BINFILES +=	user/idle \
 
 # Custom binary files for testing
 KERN_BINFILES += user/getpriority \
-			user/unauthorized-setpriority
+			user/unauthorizedsetpriority
 
 KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))
 KERN_OBJFILES := $(patsubst %.S, $(OBJDIR)/%.o, $(KERN_OBJFILES))
