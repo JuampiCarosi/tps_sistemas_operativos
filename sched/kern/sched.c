@@ -6,7 +6,7 @@
 #include <kern/monitor.h>
 #include <kern/sched.h>
 
-#define MAX_MLFQ_EXECUTIONS 500
+#define MAX_MLFQ_EXECUTIONS 50
 #define MAX_QUEUES 4
 
 void sched_halt(void);
@@ -46,9 +46,9 @@ sched_push_env(envid_t env_id, int queue)
 	struct MLFQ_queue *q = get_queue(queue);
 
 	int index = q->last % NENV;
-	int biggest_queue = MAX_QUEUES - 1;
+	int least_priority_queue = MAX_QUEUES - 1;
 	envs[ENVX(env_id)].current_queue =
-	        queue > biggest_queue ? biggest_queue : queue;
+	        queue > least_priority_queue ? least_priority_queue : queue;
 	q->envs[index] = env_id;
 	q->last++;
 }
@@ -126,11 +126,13 @@ round_robin()
 		next_env = &envs[actual_index];
 
 		if (next_env->env_status == ENV_RUNNABLE) {
+			next_env->executions++;
 			env_run(next_env);
 		}
 	}
 
 	if (curenv && curenv->env_status == ENV_RUNNING) {
+		curenv->executions++;
 		env_run(curenv);
 	}
 }
@@ -178,6 +180,7 @@ priority_MLFQ()
 	if (!best_priority_queue) {
 		if (curenv && curenv->env_status == ENV_RUNNING) {
 			mlfq_sched.total_executions++;
+			curenv->executions++;
 			env_run(curenv);
 		} else {
 			sched_halt();
@@ -195,6 +198,7 @@ priority_MLFQ()
 			sched_remove_env(best_priority_queue, i % NENV);
 			sched_push_env(next_env_id, queue_number + 1);
 			mlfq_sched.total_executions++;
+			next_env->executions++;
 			env_run(next_env);
 		}
 	}
@@ -274,6 +278,20 @@ sched_halt(void)
 	if (i == NENV) {
 		cprintf("No runnable environments in the "
 		        "system!\n");
+
+		cprintf("\nHistory of executed environments:\n\n");
+		for (int i = 0; i < NENV; i++) {
+			struct Env *env = &envs[i];
+			if (env->executions > 0) {
+				cprintf("env_id: %d, executions: %d\n",
+				        env->env_id,
+				        env->executions);
+			}
+		}
+
+		cprintf("Scheduler was called a total of: %d times.\n\n",
+		        sched_runs);
+
 		while (1)
 			monitor(NULL);
 	}
