@@ -261,6 +261,8 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 	env_free_list = e->env_link;
 	*newenv_store = e;
 
+	e->executions = 0;
+
 	struct Env *parent = NULL;
 	envid2env(parent_id, &parent, 0);
 	sched_push_env(e->env_id, parent ? parent->current_queue : 0);
