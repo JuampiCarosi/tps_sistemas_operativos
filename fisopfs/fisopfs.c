@@ -9,6 +9,32 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#define FS_PATH "fs.fisopfs"
+#define MAX_CONTENT 1024
+#define MAX_INODES 100
+
+enum inode_type { INODE_FILE, INODE_DIR };
+
+typedef struct inode {
+	char *path;
+	char content[MAX_CONTENT];
+	int size;
+	enum inode_type type;
+} inode_t;
+
+inode_t inodes[MAX_INODES];
+
+void
+deserialize(FILE *fp)
+{
+	read(fp, inodes, sizeof(inode_t) * MAX_INODES);
+}
+
+void
+serialize(FILE *fp)
+{
+	write(fp, inodes, sizeof(inode_t) * MAX_INODES);
+}
 
 static int
 fisopfs_getattr(const char *path, struct stat *st)
@@ -16,10 +42,18 @@ fisopfs_getattr(const char *path, struct stat *st)
 	printf("[debug] fisopfs_getattr - path: %s\n", path);
 
 	if (strcmp(path, "/") == 0) {
+		printf("path root inode = %s\n", inodes[0].path);
+		printf("content root inode = %s\n", inodes[0].content);
+		printf("size root inode = %d\n", inodes[0].size);
+		printf("type root inode = %d\n", inodes[0].type);
 		st->st_uid = 1717;
 		st->st_mode = __S_IFDIR | 0755;
 		st->st_nlink = 2;
 	} else if (strcmp(path, "/fisop") == 0) {
+		printf("content fisop inode = %s\n", inodes[1].content);
+		printf("size fisop inode = %d\n", inodes[1].size);
+		printf("type fisop inode = %d\n", inodes[1].type);
+		printf("path fisop inode = %s\n", inodes[1].path);
 		st->st_uid = 1818;
 		st->st_mode = __S_IFREG | 0644;
 		st->st_size = 2048;
@@ -82,10 +116,55 @@ fisopfs_read(const char *path,
 	return size;
 }
 
+static void *
+fisopfs_init(struct fuse_conn_info *conn)
+{
+	printf("[debug] fisopfs_init\n");
+
+	FILE *fp = fopen(FS_PATH, "r");
+
+	if (!fp) {
+		inodes[0].path = "/";
+		memset(inodes[0].content, 0, MAX_CONTENT);
+		inodes[0].size = 0;
+		inodes[0].type = INODE_DIR;
+
+		inodes[1].path = "/fisop";
+		strncpy(inodes[1].content, fisop_file_contenidos, MAX_CONTENT);
+		inodes[1].size = strlen(fisop_file_contenidos);
+		inodes[1].type = INODE_FILE;
+
+	} else {
+		deserialize(fp);
+		fclose(fp);
+	}
+
+
+	return NULL;
+}
+
+static void
+fisopfs_destroy(void *userdata)
+{
+	printf("[debug] fisopfs_destroy\n");
+
+	FILE *fp = fopen(FS_PATH, "w");
+
+	if (!fp) {
+		perror("fopen");
+		return;
+	}
+
+	serialize(fp);
+	fclose(fp);
+}
+
 static struct fuse_operations operations = {
 	.getattr = fisopfs_getattr,
 	.readdir = fisopfs_readdir,
 	.read = fisopfs_read,
+	.init = fisopfs_init,
+	//.destroy = fisopfs_destroy,
 };
 
 int
