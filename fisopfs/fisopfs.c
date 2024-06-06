@@ -11,6 +11,7 @@
 #include <errno.h>
 #include "file.h"
 #define FS_PATH "fs.fisopfs"
+#define ERROR -1
 
 superblock_t superblock = {};
 
@@ -24,10 +25,7 @@ fisopfs_getattr(const char *path, struct stat *st)
 		i++;
 	}
 
-	printf("[debug] fisopfs_getattr - i: %d\n", i);
-
 	if (i == MAX_INODES) {
-		fprintf(stderr, "[debug] Getattr: %s\n", strerror(errno));
 		errno = ENOENT;
 		return -ENOENT;
 	}
@@ -44,6 +42,38 @@ fisopfs_getattr(const char *path, struct stat *st)
 	return 0;
 }
 
+int
+read_line(const char *content, char *buffer)
+{
+	int i = 0;
+
+	while (content[i] != '\n' && content[i] != '\0') {
+		buffer[i] = content[i];
+		i++;
+	}
+
+	if (content[i] == '\0') {
+		return ERROR;
+	}
+
+	buffer[i++] = '\0';
+	return i;
+}
+
+int
+get_next_entry(char *content, off_t *offset, char *buff)
+{
+	int read = read_line(content, buff);
+
+	if (read == ERROR) {
+		return ERROR;
+	}
+
+	*offset += read;
+	return 0;
+}
+
+
 static int
 fisopfs_readdir(const char *path,
                 void *buffer,
@@ -57,13 +87,34 @@ fisopfs_readdir(const char *path,
 	filler(buffer, ".", NULL, 0);
 	filler(buffer, "..", NULL, 0);
 
-	// Si nos preguntan por el directorio raiz, solo tenemos un archivo
-	if (strcmp(path, "/") == 0) {
-		filler(buffer, "fisop", NULL, 0);
-		return 0;
+	int inode_index = search_dir(path);
+
+	if (inode_index < 0) {
+		errno = ENOENT;
+		return -ENOENT;
 	}
 
-	return -ENOENT;
+	superblock.inodes[inode_index].last_access = time(NULL);
+
+	char buff[MAX_CONTENT];
+	inode_t inode = superblock.inodes[inode_index];
+	printf("inode content: %s\n", inode.content);
+
+	while (offset < (superblock.inodes[inode_index].size - 1)) {
+		int result = get_next_entry(inode.content, &offset, buff);
+		printf("offset: %lu\n", offset);
+		printf("buff: %s\n", buff);
+		printf("result: %d\n", result);
+
+		if (result == ERROR) {
+			errno = ENOENT;
+			return -ENOENT;
+		}
+
+		filler(buffer, buff, NULL, 0);
+	}
+
+	return 0;
 }
 
 #define MAX_CONTENIDO 100
@@ -104,11 +155,12 @@ fisopfs_init(struct fuse_conn_info *conn)
 
 	if (fp < 0) {
 		format_fs();
+		fp = open(FS_PATH, O_WRONLY | O_CREAT, 0644);
 	} else {
 		deserialize(fp);
-		close(fp);
 	}
 
+	close(fp);
 	return 0;
 }
 
@@ -117,7 +169,7 @@ fisopfs_destroy(void *userdata)
 {
 	printf("[debug] fisopfs_destroy\n");
 
-	int fp = open(FS_PATH, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	int fp = open(FS_PATH, O_WRONLY | O_TRUNC, 0644);
 
 	if (fp < 0) {
 		perror("Error saving filesystem\n");

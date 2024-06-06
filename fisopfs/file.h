@@ -34,5 +34,6 @@ extern superblock_t superblock;
 void deserialize(int fp);
 void serialize(int fp);
 void format_fs();
+int search_dir(const char *path);
 
 #endif  // _FILE_H_

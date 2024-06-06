@@ -1,7 +1,7 @@
 #include "file.h"
 #include <unistd.h>
 #include <string.h>
-#include <bits/stat.h>
+#include <sys/stat.h>
 
 void
 deserialize(int fp)
@@ -28,9 +28,10 @@ initialize_root_dir()
 {
 	inode_t *root = &superblock.inodes[0];
 	strcpy(root->path, "/");
-	memset(root->content, 0, MAX_CONTENT);
+	// memset(root->content, 0, MAX_CONTENT);
+	strcpy(root->content, "mateo\njuampi\n");
 	root->type = INODE_DIR;
-	root->size = 0;
+	root->size = 14;
 	root->last_access = time(NULL);
 	root->last_modification = time(NULL);
 	root->creation_time = time(NULL);
@@ -44,4 +45,19 @@ format_fs()
 {
 	superblock.inode_bitmap[0] = 1;
 	initialize_root_dir();
+}
+
+int
+search_dir(const char *path)
+{
+	int i = 0;
+	while (i < MAX_INODES && strcmp(superblock.inodes[i].path, path) != 0) {
+		i++;
+	}
+
+	if (i == MAX_INODES || superblock.inodes[i].type != INODE_DIR) {
+		return -1;
+	}
+
+	return i;
 }
