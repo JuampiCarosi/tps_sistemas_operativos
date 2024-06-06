@@ -27,13 +27,15 @@ fisopfs_getattr(const char *path, struct stat *st)
 	printf("[debug] fisopfs_getattr - i: %d\n", i);
 
 	if (i == MAX_INODES) {
+		fprintf(stderr, "[debug] Getattr: %s\n", strerror(errno));
+		errno = ENOENT;
 		return -ENOENT;
 	}
 
 	st->st_uid = getuid();
 	st->st_nlink = 1;
 	st->st_gid = getgid();
-	st->st_mode = __S_IFREG | 0644;
+	st->st_mode = __S_IFDIR | 0755;
 	st->st_size = superblock.inodes[i].size;
 	st->st_atime = superblock.inodes[i].last_access;
 	st->st_mtime = superblock.inodes[i].last_modification;
