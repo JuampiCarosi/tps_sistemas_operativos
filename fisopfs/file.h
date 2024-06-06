@@ -20,6 +20,7 @@ typedef struct inode {
 	time_t creation_time;
 	gid_t group;
 	uid_t owner;
+	mode_t permissions;
 
 } inode_t;
 

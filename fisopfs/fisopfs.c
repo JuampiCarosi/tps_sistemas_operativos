@@ -32,10 +32,10 @@ fisopfs_getattr(const char *path, struct stat *st)
 		return -ENOENT;
 	}
 
-	st->st_uid = getuid();
 	st->st_nlink = 1;
-	st->st_gid = getgid();
-	st->st_mode = __S_IFDIR | 0755;
+	st->st_uid = superblock.inodes[i].owner;
+	st->st_gid = superblock.inodes[i].group;
+	st->st_mode = superblock.inodes[i].permissions;
 	st->st_size = superblock.inodes[i].size;
 	st->st_atime = superblock.inodes[i].last_access;
 	st->st_mtime = superblock.inodes[i].last_modification;
@@ -102,12 +102,12 @@ fisopfs_init(struct fuse_conn_info *conn)
 
 	int fp = open(FS_PATH, O_RDONLY);
 
-	// if (fp < 0) {
-	format_fs();
-	// } else {
-	//	deserialize(fp);
-	//	close(fp);
-	// }
+	if (fp < 0) {
+		format_fs();
+	} else {
+		deserialize(fp);
+		close(fp);
+	}
 
 	return 0;
 }

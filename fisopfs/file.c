@@ -1,6 +1,7 @@
 #include "file.h"
 #include <unistd.h>
 #include <string.h>
+#include <bits/stat.h>
 
 void
 deserialize(int fp)
@@ -35,6 +36,7 @@ initialize_root_dir()
 	root->creation_time = time(NULL);
 	root->group = getgid();
 	root->owner = getuid();
+	root->permissions = __S_IFDIR | 0755;
 }
 
 void
