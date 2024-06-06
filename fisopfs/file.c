@@ -1,14 +1,45 @@
 #include "file.h"
 #include <unistd.h>
+#include <string.h>
 
 void
-deserialize(FILE *fp)
+deserialize(int fp)
 {
-	read(fp, inodes, sizeof(inode_t) * MAX_INODES);
+	int res = read(fp, &superblock, sizeof(superblock_t));
+
+	if (res < 0) {
+		perror("Error loading filesystem\n");
+	}
 }
 
 void
-serialize(FILE *fp)
+serialize(int fp)
 {
-	write(fp, inodes, sizeof(inode_t) * MAX_INODES);
+	int res = write(fp, &superblock, sizeof(superblock_t));
+
+	if (res < 0) {
+		perror("Error saving filesystem\n");
+	}
+}
+
+void
+initialize_root_dir()
+{
+	inode_t *root = &superblock.inodes[0];
+	strcpy(root->path, "/");
+	memset(root->content, 0, MAX_CONTENT);
+	root->type = INODE_DIR;
+	root->size = 0;
+	root->last_access = time(NULL);
+	root->last_modification = time(NULL);
+	root->creation_time = time(NULL);
+	root->group = getgid();
+	root->owner = getuid();
+}
+
+void
+format_fs()
+{
+	superblock.inode_bitmap[0] = 1;
+	initialize_root_dir();
 }

@@ -12,33 +12,32 @@
 #include "file.h"
 #define FS_PATH "fs.fisopfs"
 
-inode_t inodes[MAX_INODES];
+superblock_t superblock = {};
 
 static int
 fisopfs_getattr(const char *path, struct stat *st)
 {
 	printf("[debug] fisopfs_getattr - path: %s\n", path);
 
-	if (strcmp(path, "/") == 0) {
-		printf("path root inode = %s\n", inodes[0].path);
-		printf("content root inode = %s\n", inodes[0].content);
-		printf("size root inode = %d\n", inodes[0].size);
-		printf("type root inode = %d\n", inodes[0].type);
-		st->st_uid = 1717;
-		st->st_mode = __S_IFDIR | 0755;
-		st->st_nlink = 2;
-	} else if (strcmp(path, "/fisop") == 0) {
-		printf("content fisop inode = %s\n", inodes[1].content);
-		printf("size fisop inode = %d\n", inodes[1].size);
-		printf("type fisop inode = %d\n", inodes[1].type);
-		printf("path fisop inode = %s\n", inodes[1].path);
-		st->st_uid = 1818;
-		st->st_mode = __S_IFREG | 0644;
-		st->st_size = 2048;
-		st->st_nlink = 1;
-	} else {
+	int i = 0;
+	while (i < MAX_INODES && strcmp(superblock.inodes[i].path, path) != 0) {
+		i++;
+	}
+
+	printf("[debug] fisopfs_getattr - i: %d\n", i);
+
+	if (i == MAX_INODES) {
 		return -ENOENT;
 	}
+
+	st->st_uid = getuid();
+	st->st_nlink = 1;
+	st->st_gid = getgid();
+	st->st_mode = __S_IFREG | 0644;
+	st->st_size = superblock.inodes[i].size;
+	st->st_atime = superblock.inodes[i].last_access;
+	st->st_mtime = superblock.inodes[i].last_modification;
+	st->st_ctime = superblock.inodes[i].creation_time;
 
 	return 0;
 }
@@ -99,26 +98,16 @@ fisopfs_init(struct fuse_conn_info *conn)
 {
 	printf("[debug] fisopfs_init\n");
 
-	FILE *fp = fopen(FS_PATH, "r");
+	int fp = open(FS_PATH, O_RDONLY);
 
-	if (!fp) {
-		inodes[0].path = "/";
-		memset(inodes[0].content, 0, MAX_CONTENT);
-		inodes[0].size = 0;
-		inodes[0].type = INODE_DIR;
+	// if (fp < 0) {
+	format_fs();
+	// } else {
+	//	deserialize(fp);
+	//	close(fp);
+	// }
 
-		inodes[1].path = "/fisop";
-		strncpy(inodes[1].content, fisop_file_contenidos, MAX_CONTENT);
-		inodes[1].size = strlen(fisop_file_contenidos);
-		inodes[1].type = INODE_FILE;
-
-	} else {
-		deserialize(fp);
-		fclose(fp);
-	}
-
-
-	return NULL;
+	return 0;
 }
 
 static void
@@ -126,15 +115,15 @@ fisopfs_destroy(void *userdata)
 {
 	printf("[debug] fisopfs_destroy\n");
 
-	FILE *fp = fopen(FS_PATH, "w");
+	int fp = open(FS_PATH, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
-	if (!fp) {
-		perror("fopen");
+	if (fp < 0) {
+		perror("Error saving filesystem\n");
 		return;
 	}
 
 	serialize(fp);
-	fclose(fp);
+	close(fp);
 }
 
 static struct fuse_operations operations = {
@@ -142,7 +131,7 @@ static struct fuse_operations operations = {
 	.readdir = fisopfs_readdir,
 	.read = fisopfs_read,
 	.init = fisopfs_init,
-	//.destroy = fisopfs_destroy,
+	.destroy = fisopfs_destroy,
 };
 
 int
