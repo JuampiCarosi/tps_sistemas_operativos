@@ -9,32 +9,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include "file.h"
 #define FS_PATH "fs.fisopfs"
-#define MAX_CONTENT 1024
-#define MAX_INODES 100
-
-enum inode_type { INODE_FILE, INODE_DIR };
-
-typedef struct inode {
-	char *path;
-	char content[MAX_CONTENT];
-	int size;
-	enum inode_type type;
-} inode_t;
 
 inode_t inodes[MAX_INODES];
-
-void
-deserialize(FILE *fp)
-{
-	read(fp, inodes, sizeof(inode_t) * MAX_INODES);
-}
-
-void
-serialize(FILE *fp)
-{
-	write(fp, inodes, sizeof(inode_t) * MAX_INODES);
-}
 
 static int
 fisopfs_getattr(const char *path, struct stat *st)
