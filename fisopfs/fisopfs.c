@@ -43,16 +43,17 @@ fisopfs_getattr(const char *path, struct stat *st)
 }
 
 int
-read_line(const char *content, char *buffer)
+read_line(const char *content, char *buffer, off_t offset)
 {
 	int i = 0;
 
-	while (content[i] != '\n' && content[i] != '\0') {
-		buffer[i] = content[i];
+	while (content[offset] != '\n' && content[offset] != '\0') {
+		buffer[i] = content[offset];
 		i++;
+		offset++;
 	}
 
-	if (content[i] == '\0') {
+	if (content[offset] == '\0' && i == 0) {
 		return ERROR;
 	}
 
@@ -63,7 +64,7 @@ read_line(const char *content, char *buffer)
 int
 get_next_entry(char *content, off_t *offset, char *buff)
 {
-	int read = read_line(content, buff);
+	int read = read_line(content, buff, *offset);
 
 	if (read == ERROR) {
 		return ERROR;

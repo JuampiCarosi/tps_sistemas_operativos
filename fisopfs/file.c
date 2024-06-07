@@ -28,8 +28,7 @@ initialize_root_dir()
 {
 	inode_t *root = &superblock.inodes[0];
 	strcpy(root->path, "/");
-	// memset(root->content, 0, MAX_CONTENT);
-	strcpy(root->content, "mateo\njuampi\n");
+	memset(root->content, 0, MAX_CONTENT);
 	root->type = INODE_DIR;
 	root->size = 14;
 	root->last_access = time(NULL);
