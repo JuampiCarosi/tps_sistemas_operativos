@@ -7,6 +7,7 @@
 #define MAX_CONTENT 1024
 #define MAX_INODES 100
 #define MAX_PATH 256
+#define ERROR -1
 
 enum inode_type { INODE_FILE, INODE_DIR };
 
@@ -34,6 +35,6 @@ extern superblock_t superblock;
 void deserialize(int fp);
 void serialize(int fp);
 void format_fs();
-int search_dir(const char *path);
+int search_inode(const char *path);
 
 #endif  // _FILE_H_

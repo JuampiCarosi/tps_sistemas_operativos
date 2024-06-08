@@ -47,15 +47,15 @@ format_fs()
 }
 
 int
-search_dir(const char *path)
+search_inode(const char *path)
 {
 	int i = 0;
 	while (i < MAX_INODES && strcmp(superblock.inodes[i].path, path) != 0) {
 		i++;
 	}
 
-	if (i == MAX_INODES || superblock.inodes[i].type != INODE_DIR) {
-		return -1;
+	if (i == MAX_INODES) {
+		return ERROR;
 	}
 
 	return i;

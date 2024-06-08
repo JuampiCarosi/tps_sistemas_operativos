@@ -5,13 +5,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/file.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include "file.h"
 #define FS_PATH "fs.fisopfs"
-#define ERROR -1
 
 superblock_t superblock = {};
 
@@ -88,24 +86,25 @@ fisopfs_readdir(const char *path,
 	filler(buffer, ".", NULL, 0);
 	filler(buffer, "..", NULL, 0);
 
-	int inode_index = search_dir(path);
+	int inode_index = search_inode(path);
 
-	if (inode_index < 0) {
+	if (inode_index == ERROR) {
 		errno = ENOENT;
 		return -ENOENT;
 	}
 
+	if (superblock.inodes[inode_index].type != INODE_DIR) {
+		errno = ENOTDIR;
+		return -ENOTDIR;
+	}
+
 	superblock.inodes[inode_index].last_access = time(NULL);
 
-	char buff[MAX_CONTENT];
 	inode_t inode = superblock.inodes[inode_index];
-	printf("inode content: %s\n", inode.content);
 
 	while (offset < (superblock.inodes[inode_index].size - 1)) {
+		char buff[MAX_CONTENT];
 		int result = get_next_entry(inode.content, &offset, buff);
-		printf("offset: %lu\n", offset);
-		printf("buff: %s\n", buff);
-		printf("result: %d\n", result);
 
 		if (result == ERROR) {
 			errno = ENOENT;
@@ -117,9 +116,6 @@ fisopfs_readdir(const char *path,
 
 	return 0;
 }
-
-#define MAX_CONTENIDO 100
-static char fisop_file_contenidos[MAX_CONTENIDO] = "hola fisopfs!\n";
 
 static int
 fisopfs_read(const char *path,
@@ -133,16 +129,26 @@ fisopfs_read(const char *path,
 	       offset,
 	       size);
 
-	// Solo tenemos un archivo hardcodeado!
-	if (strcmp(path, "/fisop") != 0)
-		return -ENOENT;
+	int inode_index = search_inode(path);
 
-	if (offset + size > strlen(fisop_file_contenidos))
-		size = strlen(fisop_file_contenidos) - offset;
+	if (inode_index == ERROR) {
+		errno = ENOENT;
+		return -ENOENT;
+	}
+
+	if (superblock.inodes[inode_index].type != INODE_FILE) {
+		errno = EISDIR;
+		return -EISDIR;
+	}
+
+	inode_t file = superblock.inodes[inode_index];
+
+	if (offset + size > file.size)
+		size = file.size - offset;
 
 	size = size > 0 ? size : 0;
 
-	memcpy(buffer, fisop_file_contenidos + offset, size);
+	memcpy(buffer, file.content + offset, size);
 
 	return size;
 }
