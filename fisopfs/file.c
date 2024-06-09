@@ -25,7 +25,8 @@ serialize(int fp)
 }
 
 char *
-get_parent(const char path[MAX_PATH]) {
+get_parent(const char path[MAX_PATH])
+{
 	char *parent = malloc(sizeof(char) * (strlen(path) + 1));
 	strcpy(parent, path);
 	char *last_slash = strrchr(parent, '/');
