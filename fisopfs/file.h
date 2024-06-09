@@ -1,6 +1,8 @@
 #ifndef _FILE_H_
 #define _FILE_H_
 #include <sys/types.h>
+#include <stdio.h>
+#include <time.h>
 #define MAX_CONTENT 1024
 #define MAX_INODES 100
 #define MAX_PATH 256

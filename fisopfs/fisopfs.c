@@ -13,7 +13,8 @@
 
 superblock_t superblock = {};
 
-char *strip_newline_character(char *str)
+char *
+strip_newline_character(char *str)
 {
 	char *pos;
 	if ((pos = strchr(str, '\n')) != NULL) {
@@ -31,7 +32,8 @@ fisopfs_getattr(const char *path, struct stat *st)
 	char path_copy[MAX_PATH];
 	strcpy(path_copy, path);
 
-	while (i < MAX_INODES && strcmp(superblock.inodes[i].path, strip_newline_character(path_copy)) != 0) {
+	while (i < MAX_INODES && strcmp(superblock.inodes[i].path,
+	                                strip_newline_character(path_copy)) != 0) {
 		i++;
 	}
 
@@ -220,7 +222,9 @@ fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 	dir_entry[entry_size] = '\n';
 	dir_entry[++entry_size] = '\0';
 
-	strcpy(superblock.inodes[dir_index].content + superblock.inodes[dir_index].size, dir_entry);
+	strcpy(superblock.inodes[dir_index].content +
+	               superblock.inodes[dir_index].size,
+	       dir_entry);
 	superblock.inodes[dir_index].size += entry_size;
 
 	free(parent_path);
