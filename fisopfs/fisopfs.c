@@ -13,13 +13,25 @@
 
 superblock_t superblock = {};
 
+char *strip_newline_character(char *str)
+{
+	char *pos;
+	if ((pos = strchr(str, '\n')) != NULL) {
+		*pos = '\0';
+	}
+	return str;
+}
+
 static int
 fisopfs_getattr(const char *path, struct stat *st)
 {
 	printf("[debug] fisopfs_getattr - path: %s\n", path);
 
 	int i = 0;
-	while (i < MAX_INODES && strcmp(superblock.inodes[i].path, path) != 0) {
+	char path_copy[MAX_PATH];
+	strcpy(path_copy, path);
+
+	while (i < MAX_INODES && strcmp(superblock.inodes[i].path, strip_newline_character(path_copy)) != 0) {
 		i++;
 	}
 
@@ -28,14 +40,19 @@ fisopfs_getattr(const char *path, struct stat *st)
 		return -ENOENT;
 	}
 
-	st->st_nlink = 1;
-	st->st_uid = superblock.inodes[i].owner;
-	st->st_gid = superblock.inodes[i].group;
-	st->st_mode = superblock.inodes[i].permissions;
-	st->st_size = superblock.inodes[i].size;
-	st->st_atime = superblock.inodes[i].last_access;
-	st->st_mtime = superblock.inodes[i].last_modification;
-	st->st_ctime = superblock.inodes[i].creation_time;
+	inode_t inode = superblock.inodes[i];
+	st->st_nlink = 2;
+	st->st_uid = inode.owner;
+	st->st_gid = inode.group;
+	st->st_size = inode.size;
+	st->st_atime = inode.last_access;
+	st->st_mtime = inode.last_modification;
+	st->st_ctime = inode.creation_time;
+	st->st_mode = __S_IFDIR | 0755;
+	if (inode.type == INODE_FILE) {
+		st->st_mode = __S_IFREG | 0644;
+		st->st_nlink = 1;
+	}
 
 	return 0;
 }
@@ -50,7 +67,6 @@ read_line(const char *content, char *buffer, off_t offset)
 		i++;
 		offset++;
 	}
-
 	if (content[offset] == '\0' && i == 0) {
 		return ERROR;
 	}
@@ -141,16 +157,75 @@ fisopfs_read(const char *path,
 		return -EISDIR;
 	}
 
-	inode_t file = superblock.inodes[inode_index];
+	inode_t *file = &superblock.inodes[inode_index];
 
-	if (offset + size > file.size)
-		size = file.size - offset;
+	if (offset + size > file->size)
+		size = file->size - offset;
 
 	size = size > 0 ? size : 0;
 
-	memcpy(buffer, file.content + offset, size);
+	memcpy(buffer, file->content + offset, size);
+	file->last_access = time(NULL);
 
 	return size;
+}
+
+static int
+fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
+{
+	printf("[debug] fisopfs_create - path: %s\n", path);
+
+	int i = 0;
+	while (i < MAX_INODES && superblock.inode_bitmap[i] != 0) {
+		i++;
+	}
+
+	if (i == MAX_INODES) {
+		errno = ENOSPC;
+		return -ENOSPC;
+	}
+
+	if (strlen(path) > MAX_PATH) {
+		errno = ENAMETOOLONG;
+		return -ENAMETOOLONG;
+	}
+
+	superblock.inode_bitmap[i] = 1;
+	strcpy(superblock.inodes[i].path, path);
+	superblock.inodes[i].type = INODE_FILE;
+	superblock.inodes[i].size = 0;
+	superblock.inodes[i].last_access = time(NULL);
+	superblock.inodes[i].last_modification = time(NULL);
+	superblock.inodes[i].creation_time = time(NULL);
+	superblock.inodes[i].group = getgid();
+	superblock.inodes[i].owner = getuid();
+	superblock.inodes[i].permissions = mode;
+
+	char *parent_path = get_parent(path);
+	int dir_index = search_inode(parent_path);
+	if (dir_index == ERROR) {
+		errno = ENOENT;
+		return -ENOENT;
+	}
+
+	inode_t *parent_inode = &superblock.inodes[dir_index];
+
+	if (parent_inode->type != INODE_DIR) {
+		errno = ENOTDIR;
+		return -ENOTDIR;
+	}
+	char *dir_entry = strrchr(path, '/');
+	dir_entry++;
+	int entry_size = strlen(dir_entry);
+	dir_entry[entry_size] = '\n';
+	dir_entry[++entry_size] = '\0';
+
+	strcpy(superblock.inodes[dir_index].content + superblock.inodes[dir_index].size, dir_entry);
+	superblock.inodes[dir_index].size += entry_size;
+
+	free(parent_path);
+
+	return 0;
 }
 
 static void *
@@ -193,6 +268,7 @@ static struct fuse_operations operations = {
 	.read = fisopfs_read,
 	.init = fisopfs_init,
 	.destroy = fisopfs_destroy,
+	.create = fisopfs_create,
 };
 
 int

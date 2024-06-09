@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <stdlib.h>
 
 void
 deserialize(int fp)
@@ -23,6 +24,18 @@ serialize(int fp)
 	}
 }
 
+char *
+get_parent(const char path[MAX_PATH]) {
+	char *parent = malloc(sizeof(char) * (strlen(path) + 1));
+	strcpy(parent, path);
+	char *last_slash = strrchr(parent, '/');
+	if (last_slash == parent) {
+		last_slash++;
+	}
+	*last_slash = '\0';
+	return parent;
+}
+
 void
 initialize_root_dir()
 {
@@ -30,7 +43,7 @@ initialize_root_dir()
 	strcpy(root->path, "/");
 	memset(root->content, 0, MAX_CONTENT);
 	root->type = INODE_DIR;
-	root->size = 14;
+	root->size = 0;
 	root->last_access = time(NULL);
 	root->last_modification = time(NULL);
 	root->creation_time = time(NULL);

@@ -1,8 +1,5 @@
 #ifndef _FILE_H_
 #define _FILE_H_
-#include <stdio.h>
-#include <time.h>
-#include <unistd.h>
 #include <sys/types.h>
 #define MAX_CONTENT 1024
 #define MAX_INODES 100
@@ -22,7 +19,6 @@ typedef struct inode {
 	gid_t group;
 	uid_t owner;
 	mode_t permissions;
-
 } inode_t;
 
 typedef struct superblock {
@@ -36,5 +32,6 @@ void deserialize(int fp);
 void serialize(int fp);
 void format_fs();
 int search_inode(const char *path);
+char *get_parent(const char path[MAX_PATH]);
 
 #endif  // _FILE_H_
