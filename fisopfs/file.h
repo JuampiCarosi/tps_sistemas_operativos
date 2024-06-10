@@ -36,5 +36,7 @@ void format_fs();
 int search_inode(const char *path);
 char *get_parent(const char path[MAX_PATH]);
 int search_next_free_inode();
+int create_inode(const char *path, mode_t mode, enum inode_type type);
+int add_dentry_to_parent_dir(const char *path);
 
 #endif  // _FILE_H_

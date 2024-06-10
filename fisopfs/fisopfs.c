@@ -169,54 +169,23 @@ fisopfs_read(const char *path,
 }
 
 static int
-fisopfs_mkdir(const char* path, mode_t mode)
+fisopfs_mkdir(const char *path, mode_t mode)
 {
 	printf("[debug] fisopfs_mkdir - path: %s\n", path);
 
-	int free_index = search_next_free_inode();
+	int inode_index = create_inode(path, mode, INODE_DIR);
 
-	if (free_index == MAX_INODES) {
-		errno = ENOSPC;
-		return -ENOSPC;
+	if (inode_index < 0) {
+		errno = inode_index;
+		return inode_index;
 	}
 
-	inode_t *directory = &superblock.inodes[free_index];
-	strcpy(directory->path, path);
-	memset(directory->content, 0, MAX_CONTENT);
-	directory->type = INODE_DIR;
-	directory->size = 0;
-	directory->last_access = time(NULL);
-	directory->last_modification = time(NULL);
-	directory->creation_time = time(NULL);
-	directory->group = getgid();
-	directory->owner = getuid();
-	directory->permissions = mode;
+	int result = add_dentry_to_parent_dir(path);
 
-	char *parent_path = get_parent(path);
-	int dir_index = search_inode(parent_path);
-	if (dir_index == ERROR) {
-		errno = ENOENT;
-		return -ENOENT;
+	if (result < 0) {
+		errno = result;
+		return result;
 	}
-
-	inode_t *parent_inode = &superblock.inodes[dir_index];
-
-	if (parent_inode->type != INODE_DIR) {
-		errno = ENOTDIR;
-		return -ENOTDIR;
-	}
-	char *dir_entry = strrchr(path, '/');
-	dir_entry++;
-	int entry_size = strlen(dir_entry);
-	dir_entry[entry_size] = '\n';
-	dir_entry[++entry_size] = '\0';
-
-	strcpy(superblock.inodes[dir_index].content +
-		       superblock.inodes[dir_index].size,
-	       dir_entry);
-	superblock.inodes[dir_index].size += entry_size;
-
-	free(parent_path);
 
 	return 0;
 }
@@ -226,60 +195,25 @@ fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
 	printf("[debug] fisopfs_create - path: %s\n", path);
 
-	int free_index = search_next_free_inode();
+	int inode_index = create_inode(path, mode, INODE_FILE);
 
-	if (free_index == MAX_INODES) {
-		errno = ENOSPC;
-		return -ENOSPC;
+	if (inode_index < 0) {
+		errno = inode_index;
+		return inode_index;
 	}
 
-	if (strlen(path) > MAX_PATH) {
-		errno = ENAMETOOLONG;
-		return -ENAMETOOLONG;
+	int result = add_dentry_to_parent_dir(path);
+
+	if (result < 0) {
+		errno = result;
+		return result;
 	}
-
-	superblock.inode_bitmap[free_index] = 1;
-	strcpy(superblock.inodes[free_index].path, path);
-	superblock.inodes[free_index].type = INODE_FILE;
-	superblock.inodes[free_index].size = 0;
-	superblock.inodes[free_index].last_access = time(NULL);
-	superblock.inodes[free_index].last_modification = time(NULL);
-	superblock.inodes[free_index].creation_time = time(NULL);
-	superblock.inodes[free_index].group = getgid();
-	superblock.inodes[free_index].owner = getuid();
-	superblock.inodes[free_index].permissions = mode;
-
-	char *parent_path = get_parent(path);
-	int dir_index = search_inode(parent_path);
-	if (dir_index == ERROR) {
-		errno = ENOENT;
-		return -ENOENT;
-	}
-
-	inode_t *parent_inode = &superblock.inodes[dir_index];
-
-	if (parent_inode->type != INODE_DIR) {
-		errno = ENOTDIR;
-		return -ENOTDIR;
-	}
-	char *dir_entry = strrchr(path, '/');
-	dir_entry++;
-	int entry_size = strlen(dir_entry);
-	dir_entry[entry_size] = '\n';
-	dir_entry[++entry_size] = '\0';
-
-	strcpy(superblock.inodes[dir_index].content +
-	               superblock.inodes[dir_index].size,
-	       dir_entry);
-	superblock.inodes[dir_index].size += entry_size;
-
-	free(parent_path);
 
 	return 0;
 }
 
 static int
-fisopfs_utimens(const char* path, const struct timespec ts[2])
+fisopfs_utimens(const char *path, const struct timespec ts[2])
 {
 	printf("[debug] fisop_utimens - path: %s\n", path);
 
