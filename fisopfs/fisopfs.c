@@ -28,21 +28,17 @@ fisopfs_getattr(const char *path, struct stat *st)
 {
 	printf("[debug] fisopfs_getattr - path: %s\n", path);
 
-	int i = 0;
 	char path_copy[MAX_PATH];
 	strcpy(path_copy, path);
 
-	while (i < MAX_INODES && strcmp(superblock.inodes[i].path,
-	                                strip_newline_character(path_copy)) != 0) {
-		i++;
-	}
+	int inode_index = search_inode(strip_newline_character(path_copy));
 
-	if (i == MAX_INODES) {
+	if (inode_index == ERROR) {
 		errno = ENOENT;
 		return -ENOENT;
 	}
 
-	inode_t inode = superblock.inodes[i];
+	inode_t inode = superblock.inodes[inode_index];
 	st->st_nlink = 2;
 	st->st_uid = inode.owner;
 	st->st_gid = inode.group;
@@ -232,6 +228,23 @@ fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 	return 0;
 }
 
+static int
+fisop_utimens(const char* path, const struct timespec ts[2])
+{
+	printf("[debug] fisop_utimens - path: %s\n", path);
+
+	int inode_index = search_inode(path);
+
+	if (inode_index == ERROR) {
+		errno = ENOENT;
+		return -ENOENT;
+	}
+
+	superblock.inodes[inode_index].last_access = ts[0].tv_sec;
+	superblock.inodes[inode_index].last_modification = ts[1].tv_sec;
+	return 0;
+}
+
 static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
@@ -273,6 +286,7 @@ static struct fuse_operations operations = {
 	.init = fisopfs_init,
 	.destroy = fisopfs_destroy,
 	.create = fisopfs_create,
+	.utimens = fisop_utimens,
 };
 
 int
