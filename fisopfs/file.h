@@ -35,5 +35,6 @@ void serialize(int fp);
 void format_fs();
 int search_inode(const char *path);
 char *get_parent(const char path[MAX_PATH]);
+int search_next_free_inode();
 
 #endif  // _FILE_H_

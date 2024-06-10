@@ -74,3 +74,12 @@ search_inode(const char *path)
 
 	return i;
 }
+
+int search_next_free_inode()
+{
+	int i = 0;
+	while (i < MAX_INODES && superblock.inode_bitmap[i] != 0) {
+		i++;
+	}
+	return i;
+}

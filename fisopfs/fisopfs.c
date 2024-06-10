@@ -169,16 +169,66 @@ fisopfs_read(const char *path,
 }
 
 static int
+fisopfs_mkdir(const char* path, mode_t mode)
+{
+	printf("[debug] fisopfs_mkdir - path: %s\n", path);
+
+	int free_index = search_next_free_inode();
+
+	if (free_index == MAX_INODES) {
+		errno = ENOSPC;
+		return -ENOSPC;
+	}
+
+	inode_t *directory = &superblock.inodes[free_index];
+	strcpy(directory->path, path);
+	memset(directory->content, 0, MAX_CONTENT);
+	directory->type = INODE_DIR;
+	directory->size = 0;
+	directory->last_access = time(NULL);
+	directory->last_modification = time(NULL);
+	directory->creation_time = time(NULL);
+	directory->group = getgid();
+	directory->owner = getuid();
+	directory->permissions = mode;
+
+	char *parent_path = get_parent(path);
+	int dir_index = search_inode(parent_path);
+	if (dir_index == ERROR) {
+		errno = ENOENT;
+		return -ENOENT;
+	}
+
+	inode_t *parent_inode = &superblock.inodes[dir_index];
+
+	if (parent_inode->type != INODE_DIR) {
+		errno = ENOTDIR;
+		return -ENOTDIR;
+	}
+	char *dir_entry = strrchr(path, '/');
+	dir_entry++;
+	int entry_size = strlen(dir_entry);
+	dir_entry[entry_size] = '\n';
+	dir_entry[++entry_size] = '\0';
+
+	strcpy(superblock.inodes[dir_index].content +
+		       superblock.inodes[dir_index].size,
+	       dir_entry);
+	superblock.inodes[dir_index].size += entry_size;
+
+	free(parent_path);
+
+	return 0;
+}
+
+static int
 fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
 	printf("[debug] fisopfs_create - path: %s\n", path);
 
-	int i = 0;
-	while (i < MAX_INODES && superblock.inode_bitmap[i] != 0) {
-		i++;
-	}
+	int free_index = search_next_free_inode();
 
-	if (i == MAX_INODES) {
+	if (free_index == MAX_INODES) {
 		errno = ENOSPC;
 		return -ENOSPC;
 	}
@@ -188,16 +238,16 @@ fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 		return -ENAMETOOLONG;
 	}
 
-	superblock.inode_bitmap[i] = 1;
-	strcpy(superblock.inodes[i].path, path);
-	superblock.inodes[i].type = INODE_FILE;
-	superblock.inodes[i].size = 0;
-	superblock.inodes[i].last_access = time(NULL);
-	superblock.inodes[i].last_modification = time(NULL);
-	superblock.inodes[i].creation_time = time(NULL);
-	superblock.inodes[i].group = getgid();
-	superblock.inodes[i].owner = getuid();
-	superblock.inodes[i].permissions = mode;
+	superblock.inode_bitmap[free_index] = 1;
+	strcpy(superblock.inodes[free_index].path, path);
+	superblock.inodes[free_index].type = INODE_FILE;
+	superblock.inodes[free_index].size = 0;
+	superblock.inodes[free_index].last_access = time(NULL);
+	superblock.inodes[free_index].last_modification = time(NULL);
+	superblock.inodes[free_index].creation_time = time(NULL);
+	superblock.inodes[free_index].group = getgid();
+	superblock.inodes[free_index].owner = getuid();
+	superblock.inodes[free_index].permissions = mode;
 
 	char *parent_path = get_parent(path);
 	int dir_index = search_inode(parent_path);
@@ -229,7 +279,7 @@ fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 }
 
 static int
-fisop_utimens(const char* path, const struct timespec ts[2])
+fisopfs_utimens(const char* path, const struct timespec ts[2])
 {
 	printf("[debug] fisop_utimens - path: %s\n", path);
 
@@ -286,7 +336,8 @@ static struct fuse_operations operations = {
 	.init = fisopfs_init,
 	.destroy = fisopfs_destroy,
 	.create = fisopfs_create,
-	.utimens = fisop_utimens,
+	.utimens = fisopfs_utimens,
+	.mkdir = fisopfs_mkdir,
 };
 
 int
