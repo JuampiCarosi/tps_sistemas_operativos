@@ -168,6 +168,68 @@ fisopfs_read(const char *path,
 	return size;
 }
 
+void
+remove_dentry_from_parent_dir(const char *path, inode_t *parent)
+{
+	char *dir_entry = strrchr(path, '/');
+	dir_entry++;
+
+	char *new_content = malloc(MAX_CONTENT);
+	int new_size = 0;
+	off_t offset = 0;
+
+	while (offset < parent->size) {
+		char buff[MAX_CONTENT];
+		int result = get_next_entry(parent->content, &offset, buff);
+
+		if (result == ERROR) {
+			break;
+		}
+
+		if (strcmp(buff, dir_entry) != 0) {
+			strcpy(new_content + new_size, buff);
+			new_size += strlen(buff);
+		}
+	}
+
+	strcpy(parent->content, new_content);
+	parent->size = new_size;
+	free(new_content);
+}
+
+static int
+fisopfs_unlink(const char *path)
+{
+	printf("[debug] fisopfs_unlink - path: %s\n", path);
+
+	int inode_index = search_inode(path);
+
+	if (inode_index == ERROR) {
+		errno = ENOENT;
+		return -ENOENT;
+	}
+
+	inode_t inode = superblock.inodes[inode_index];
+
+	if (inode.type != INODE_FILE) {
+		errno = EISDIR;
+		return -EISDIR;
+	}
+
+	superblock.inode_bitmap[inode_index] = 0;
+
+	// we have to change dentries logic so as to remove
+	// the entry from the parent directory in an easy way
+	char *parent_path = get_parent(path);
+	int parent_index = search_inode(parent_path);
+	inode_t *parent = &superblock.inodes[parent_index];
+
+	remove_dentry_from_parent_dir(path, parent);
+	free(parent_path);
+
+	return 0;
+}
+
 static int
 fisopfs_mkdir(const char *path, mode_t mode)
 {
@@ -272,6 +334,7 @@ static struct fuse_operations operations = {
 	.create = fisopfs_create,
 	.utimens = fisopfs_utimens,
 	.mkdir = fisopfs_mkdir,
+	.unlink = fisopfs_unlink,
 };
 
 int
