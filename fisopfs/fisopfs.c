@@ -66,24 +66,18 @@ read_line(const char *content, char *buffer, off_t offset)
 		offset++;
 	}
 	if (content[offset] == '\0' && i == 0) {
-		return ERROR;
+		return 0;
 	}
 
 	buffer[i++] = '\0';
 	return i;
 }
 
-int
+void
 get_next_entry(char *content, off_t *offset, char *buff)
 {
 	int read = read_line(content, buff, *offset);
-
-	if (read == ERROR) {
-		return ERROR;
-	}
-
 	*offset += read;
-	return 0;
 }
 
 
@@ -116,14 +110,9 @@ fisopfs_readdir(const char *path,
 
 	inode_t inode = superblock.inodes[inode_index];
 
-	while (offset < (superblock.inodes[inode_index].size - 1)) {
+	while (offset < superblock.inodes[inode_index].size) {
 		char buff[MAX_CONTENT];
-		int result = get_next_entry(inode.content, &offset, buff);
-
-		if (result == ERROR) {
-			errno = ENOENT;
-			return -ENOENT;
-		}
+		get_next_entry(inode.content, &offset, buff);
 
 		filler(buffer, buff, NULL, 0);
 	}
@@ -180,13 +169,12 @@ remove_dentry_from_parent_dir(const char *path, inode_t *parent)
 
 	while (offset < parent->size) {
 		char buff[MAX_CONTENT];
-		int result = get_next_entry(parent->content, &offset, buff);
-
-		if (result == ERROR) {
-			break;
-		}
+		get_next_entry(parent->content, &offset, buff);
 
 		if (strcmp(buff, dir_entry) != 0) {
+			int buff_entry_size = strlen(buff);
+			buff[buff_entry_size] = '\n';
+			buff[++buff_entry_size] = '\0';
 			strcpy(new_content + new_size, buff);
 			new_size += strlen(buff);
 		}
