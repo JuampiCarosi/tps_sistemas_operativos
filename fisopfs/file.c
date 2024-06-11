@@ -53,10 +53,6 @@ search_inode(const char *path)
 		i++;
 	}
 
-	if (superblock.inode_bitmap[i] == 0) {
-		return ERROR;
-	}
-
 	if (i == MAX_INODES) {
 		return ERROR;
 	}
