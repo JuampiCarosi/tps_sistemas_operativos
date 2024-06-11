@@ -160,6 +160,7 @@ fisopfs_unlink(const char *path)
 
 	remove_dentry_from_parent_dir(path, parent);
 	free(parent_path);
+	strcpy(superblock.inodes[inode_index].path, "");
 
 	return 0;
 }
