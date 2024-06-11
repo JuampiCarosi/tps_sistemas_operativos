@@ -49,7 +49,8 @@ int
 search_inode(const char *path)
 {
 	int i = 0;
-	while (i < MAX_INODES && strcmp(superblock.inodes[i].path, path) != 0) {
+	while (i < MAX_INODES && (strcmp(superblock.inodes[i].path, path) != 0 ||
+	                          superblock.inode_bitmap[i] == 0)) {
 		i++;
 	}
 
