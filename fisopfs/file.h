@@ -38,5 +38,8 @@ char *get_parent(const char path[MAX_PATH]);
 int search_next_free_inode();
 int create_inode(const char *path, mode_t mode, enum inode_type type);
 int add_dentry_to_parent_dir(const char *path);
+void remove_dentry_from_parent_dir(const char *path, inode_t *parent);
+void get_next_entry(char *content, off_t *offset, char *buff);
+int read_line(const char *content, char *buffer, off_t offset);
 
 #endif  // _FILE_H_

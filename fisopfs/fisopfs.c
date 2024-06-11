@@ -55,32 +55,6 @@ fisopfs_getattr(const char *path, struct stat *st)
 	return 0;
 }
 
-int
-read_line(const char *content, char *buffer, off_t offset)
-{
-	int i = 0;
-
-	while (content[offset] != '\n' && content[offset] != '\0') {
-		buffer[i] = content[offset];
-		i++;
-		offset++;
-	}
-	if (content[offset] == '\0' && i == 0) {
-		return 0;
-	}
-
-	buffer[i++] = '\0';
-	return i;
-}
-
-void
-get_next_entry(char *content, off_t *offset, char *buff)
-{
-	int read = read_line(content, buff, *offset);
-	*offset += read;
-}
-
-
 static int
 fisopfs_readdir(const char *path,
                 void *buffer,
@@ -155,34 +129,6 @@ fisopfs_read(const char *path,
 	file->last_access = time(NULL);
 
 	return size;
-}
-
-void
-remove_dentry_from_parent_dir(const char *path, inode_t *parent)
-{
-	char *dir_entry = strrchr(path, '/');
-	dir_entry++;
-
-	char *new_content = calloc(MAX_CONTENT, sizeof(char));
-	int new_size = 0;
-	off_t offset = 0;
-
-	while (offset < parent->size) {
-		char buff[MAX_CONTENT];
-		get_next_entry(parent->content, &offset, buff);
-
-		if (strcmp(buff, dir_entry) != 0) {
-			int buff_entry_size = strlen(buff);
-			buff[buff_entry_size] = '\n';
-			buff[++buff_entry_size] = '\0';
-			strcpy(new_content + new_size, buff);
-			new_size += strlen(buff);
-		}
-	}
-
-	strcpy(parent->content, new_content);
-	parent->size = new_size;
-	free(new_content);
 }
 
 static int
