@@ -115,17 +115,17 @@ create_inode(const char *path, mode_t mode, enum inode_type type)
 		return -ENOSPC;
 	}
 
-	inode_t *directory = &superblock.inodes[free_index];
-	strcpy(directory->path, path);
-	memset(directory->content, 0, MAX_CONTENT);
-	directory->type = type;
-	directory->size = 0;
-	directory->last_access = time(NULL);
-	directory->last_modification = time(NULL);
-	directory->creation_time = time(NULL);
-	directory->group = getgid();
-	directory->owner = getuid();
-	directory->permissions = mode;
+	inode_t *inode = &superblock.inodes[free_index];
+	strcpy(inode->path, path);
+	memset(inode->content, 0, MAX_CONTENT);
+	inode->type = type;
+	inode->size = 0;
+	inode->last_access = time(NULL);
+	inode->last_modification = time(NULL);
+	inode->creation_time = time(NULL);
+	inode->group = getgid();
+	inode->owner = getuid();
+	inode->permissions = mode;
 
 	superblock.inode_bitmap[free_index] = 1;
 

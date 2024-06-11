@@ -163,7 +163,7 @@ remove_dentry_from_parent_dir(const char *path, inode_t *parent)
 	char *dir_entry = strrchr(path, '/');
 	dir_entry++;
 
-	char *new_content = malloc(MAX_CONTENT);
+	char *new_content = calloc(MAX_CONTENT, sizeof(char));
 	int new_size = 0;
 	off_t offset = 0;
 
