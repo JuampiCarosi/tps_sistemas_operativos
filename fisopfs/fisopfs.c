@@ -101,7 +101,7 @@ fisopfs_read(const char *path,
              off_t offset,
              struct fuse_file_info *fi)
 {
-	printf("[debug] fisopfs_read - path: %s, offset: %lu, size: %lu\n",
+	printf("[debug] fisopfs_read - path: %s, offset: %llu, size: %lu\n",
 	       path,
 	       offset,
 	       size);
@@ -150,18 +150,8 @@ fisopfs_unlink(const char *path)
 		return -EISDIR;
 	}
 
-	superblock.inode_bitmap[inode_index] = 0;
 
-	// we have to change dentries logic so as to remove
-	// the entry from the parent directory in an easy way
-	char *parent_path = get_parent(path);
-	int parent_index = search_inode(parent_path);
-	inode_t *parent = &superblock.inodes[parent_index];
-
-	remove_dentry_from_parent_dir(path, parent);
-	free(parent_path);
-	strcpy(superblock.inodes[inode_index].path, "");
-
+	remove_inode(path, inode_index);
 	return 0;
 }
 
@@ -284,17 +274,7 @@ fisopfs_rmdir(const char *path)
 		return -ENOTEMPTY;
 	}
 
-	superblock.inode_bitmap[inode_index] = 0;
-
-	// we have to change dentries logic so as to remove
-	// the entry from the parent directory in an easy way
-	char *parent_path = get_parent(path);
-	int parent_index = search_inode(parent_path);
-	inode_t *parent = &superblock.inodes[parent_index];
-
-	remove_dentry_from_parent_dir(path, parent);
-	free(parent_path);
-	strcpy(superblock.inodes[inode_index].path, "");
+	remove_inode(path, inode_index);
 
 	return 0;
 }

@@ -26,7 +26,7 @@ serialize(int fp)
 }
 
 char *
-get_parent(const char path[MAX_PATH])
+get_parent_path(const char path[MAX_PATH])
 {
 	char *parent = malloc(sizeof(char) * (strlen(path) + 1));
 	strcpy(parent, path);
@@ -36,6 +36,20 @@ get_parent(const char path[MAX_PATH])
 	}
 	*last_slash = '\0';
 	return parent;
+}
+
+inode_t *
+get_parent(const char path[MAX_PATH], int *error)
+{
+	char *parent_path = get_parent_path(path);
+	int parent_index = search_inode(parent_path);
+	if (parent_index == ERROR) {
+		*error = -ENOENT;
+		free(parent_path);
+		return NULL;
+	}
+	free(parent_path);
+	return &superblock.inodes[parent_index];
 }
 
 void
@@ -97,8 +111,15 @@ get_next_entry(char *content, off_t *offset, char *buff)
 }
 
 void
-remove_dentry_from_parent_dir(const char *path, inode_t *parent)
+remove_inode(const char *path, int inode_index)
 {
+	superblock.inode_bitmap[inode_index] = 0;
+
+	// we have to change dentries logic so as to remove
+	// the entry from the parent directory in an easy way
+	int error;
+	inode_t *parent = get_parent(path, &error);
+
 	char *dir_entry = strrchr(path, '/');
 	dir_entry++;
 
@@ -127,7 +148,7 @@ remove_dentry_from_parent_dir(const char *path, inode_t *parent)
 int
 add_dentry_to_parent_dir(const char *path)
 {
-	char *parent_path = get_parent(path);
+	char *parent_path = get_parent_path(path);
 	int dir_index = search_inode(parent_path);
 	if (dir_index == ERROR) {
 		errno = ENOENT;
