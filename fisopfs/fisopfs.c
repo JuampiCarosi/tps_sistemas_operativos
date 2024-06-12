@@ -260,6 +260,45 @@ fisopfs_destroy(void *userdata)
 	close(fp);
 }
 
+static int
+fisopfs_rmdir(const char *path)
+{
+	printf("[debug] fisopfs_rmdir - path: %s\n", path);
+
+	int inode_index = search_inode(path);
+
+	if (inode_index == ERROR) {
+		errno = ENOENT;
+		return -ENOENT;
+	}
+
+	inode_t inode = superblock.inodes[inode_index];
+
+	if (inode.type != INODE_DIR) {
+		errno = ENOTDIR;
+		return -ENOTDIR;
+	}
+
+	if (inode.size > 0) {
+		errno = ENOTEMPTY;
+		return -ENOTEMPTY;
+	}
+
+	superblock.inode_bitmap[inode_index] = 0;
+
+	// we have to change dentries logic so as to remove
+	// the entry from the parent directory in an easy way
+	char *parent_path = get_parent(path);
+	int parent_index = search_inode(parent_path);
+	inode_t *parent = &superblock.inodes[parent_index];
+
+	remove_dentry_from_parent_dir(path, parent);
+	free(parent_path);
+	strcpy(superblock.inodes[inode_index].path, "");
+
+	return 0;
+}
+
 static struct fuse_operations operations = {
 	.getattr = fisopfs_getattr,
 	.readdir = fisopfs_readdir,
@@ -270,6 +309,8 @@ static struct fuse_operations operations = {
 	.utimens = fisopfs_utimens,
 	.mkdir = fisopfs_mkdir,
 	.unlink = fisopfs_unlink,
+	.rmdir = fisopfs_rmdir,
+
 };
 
 int
