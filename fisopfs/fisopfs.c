@@ -149,8 +149,7 @@ fisopfs_unlink(const char *path)
 		errno = EISDIR;
 		return -EISDIR;
 	}
-
-
+	
 	remove_inode(path, inode_index);
 	return 0;
 }
@@ -317,6 +316,34 @@ fisopfs_write(const char *path,
 	return size;
 }
 
+static int
+fisopfs_truncate(const char *path, off_t size)
+{
+	printf("[debug] fisopfs_truncate - path: %s, size: %lu\n", path, size);
+
+	int inode_index = search_inode(path);
+
+	if (inode_index == ERROR) {
+		errno = ENOENT;
+		return -ENOENT;
+	}
+
+	if (superblock.inodes[inode_index].type != INODE_FILE) {
+		errno = EISDIR;
+		return -EISDIR;
+	}
+
+	inode_t *file = &superblock.inodes[inode_index];
+
+	if (size > MAX_CONTENT)
+		size = MAX_CONTENT;
+
+	file->size = size;
+	file->last_modification = time(NULL);
+
+	return 0;
+}
+
 static struct fuse_operations operations = {
 	.getattr = fisopfs_getattr,
 	.readdir = fisopfs_readdir,
@@ -329,6 +356,7 @@ static struct fuse_operations operations = {
 	.unlink = fisopfs_unlink,
 	.rmdir = fisopfs_rmdir,
 	.write = fisopfs_write,
+	.truncate = fisopfs_truncate,
 };
 
 int
