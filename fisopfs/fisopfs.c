@@ -149,7 +149,7 @@ fisopfs_unlink(const char *path)
 		errno = EISDIR;
 		return -EISDIR;
 	}
-	
+
 	remove_inode(path, inode_index);
 	return 0;
 }
@@ -280,10 +280,10 @@ fisopfs_rmdir(const char *path)
 
 static int
 fisopfs_write(const char *path,
-	      const char *buffer,
-	      size_t size,
-	      off_t offset,
-	      struct fuse_file_info *fi)
+              const char *buffer,
+              size_t size,
+              off_t offset,
+              struct fuse_file_info *fi)
 {
 	printf("[debug] fisopfs_write - path: %s, offset: %lu, size: %lu\n",
 	       path,
