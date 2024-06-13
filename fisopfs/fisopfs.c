@@ -101,7 +101,7 @@ fisopfs_read(const char *path,
              off_t offset,
              struct fuse_file_info *fi)
 {
-	printf("[debug] fisopfs_read - path: %s, offset: %llu, size: %lu\n",
+	printf("[debug] fisopfs_read - path: %s, offset: %lu, size: %lu\n",
 	       path,
 	       offset,
 	       size);
@@ -279,6 +279,44 @@ fisopfs_rmdir(const char *path)
 	return 0;
 }
 
+static int
+fisopfs_write(const char *path,
+	      const char *buffer,
+	      size_t size,
+	      off_t offset,
+	      struct fuse_file_info *fi)
+{
+	printf("[debug] fisopfs_write - path: %s, offset: %lu, size: %lu\n",
+	       path,
+	       offset,
+	       size);
+
+	int inode_index = search_inode(path);
+
+	if (inode_index == ERROR) {
+		errno = ENOENT;
+		return -ENOENT;
+	}
+
+	if (superblock.inodes[inode_index].type != INODE_FILE) {
+		errno = EISDIR;
+		return -EISDIR;
+	}
+
+	inode_t *file = &superblock.inodes[inode_index];
+
+	if (offset + size > MAX_CONTENT)
+		size = MAX_CONTENT - offset;
+
+	size = size > 0 ? size : 0;
+
+	memcpy(file->content + offset, buffer, size);
+	file->size = offset + size;
+	file->last_modification = time(NULL);
+
+	return size;
+}
+
 static struct fuse_operations operations = {
 	.getattr = fisopfs_getattr,
 	.readdir = fisopfs_readdir,
@@ -290,7 +328,7 @@ static struct fuse_operations operations = {
 	.mkdir = fisopfs_mkdir,
 	.unlink = fisopfs_unlink,
 	.rmdir = fisopfs_rmdir,
-
+	.write = fisopfs_write,
 };
 
 int
