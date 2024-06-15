@@ -21,5 +21,5 @@ for test in "${tests[@]}"; do
     fi
 done
 
-echo "Tests passed: $passed"
-echo "Tests failed: $failed"
+echo -e "\033[0;32mTests passed: $passed\033[0;37m"
+echo -e "\033[0;31mTests failed: $failed\033[0;37m"
