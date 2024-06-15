@@ -1,13 +1,17 @@
 #!/bin/bash
+VERDE="\e[0;32m"
+ROJO="\e[0;31m"
+RESET="\e[0m"
 
 cd prueba
 
-mkdir directorio1
+mkdir directorio 2> /dev/null
+RESULTADO=$?
 
-if [[ -d "directorio1" ]]; then
-    echo "Creación de directorios: OK"
+if [ $RESULTADO -eq 0 ] && [ -d "directorio" ]; then
+    echo -e "Creacion de directorios: $VERDE OK $RESET"
     exit 0
 else
-    echo "Creación de directorios: FAIL"
+    echo -e "Creacion de directorios: $ROJO FAIL $RESET"
     exit 1
 fi
