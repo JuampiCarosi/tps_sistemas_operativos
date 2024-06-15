@@ -1,9 +1,5 @@
 #!/bin/bash
 
-rm fs.fisopfs
-
-sleep 1
-
 tests=(
     "tests/creacion_archivos.sh"
     "tests/creacion_directorios.sh"
