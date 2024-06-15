@@ -1,15 +1,16 @@
 #!/bin/bash
 
 rm fs.fisopfs
-mkdir -p prueba
-
-./fisopfs -f prueba/ &
-FISOPFS_PID=$!
 
 sleep 1
 
 tests=(
     "tests/creacion_archivos.sh"
+    "tests/creacion_directorios.sh"
+    "tests/creacion_multiples_niveles.sh"
+    "tests/escritura_archivos.sh"
+    "tests/borrado_archivos.sh"
+    "tests/borrado_directorios.sh"
 )
 
 passed=0
@@ -23,8 +24,6 @@ for test in "${tests[@]}"; do
         failed=$((failed + 1))
     fi
 done
-
-kill $FISOPFS_PID
 
 echo "Tests passed: $passed"
 echo "Tests failed: $failed"
