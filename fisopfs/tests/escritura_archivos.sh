@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd prueba
+
 echo "Nuevo contenido" > archivo2.txt
 echo "Contenido adicional" >> archivo2.txt
 
