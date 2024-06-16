@@ -80,6 +80,7 @@ serialize(int fp)
 		}
 	}
 	write(fp, &inodes_amount, sizeof(int));
+	bool error = false;
 	for (int i = 0; i < superblock.inode_amount; i++) {
 		inode_t *inode = &superblock.inodes[i];
 		if (superblock.inode_bitmap[i] != 1)
@@ -88,13 +89,21 @@ serialize(int fp)
 		int write_inode = write(fp, inode, sizeof(inode_t));
 		int write_content =
 		        write(fp, inode->content, sizeof(inode->size));
-		free(superblock.inodes[i].content);
-
 
 		if (write_inode < 0 || write_content < 0) {
 			perror("Error saving filesystem\n");
-
+			error = true;
 			break;
+		}
+	}
+
+	if (error) {
+		return;
+	}
+
+	for (int i = 0; i < superblock.inode_amount; i++) {
+		if (superblock.inode_bitmap[i] == 1) {
+			free(superblock.inodes[i].content);
 		}
 	}
 }
@@ -211,8 +220,6 @@ remove_inode(const char *path, int inode_index)
 {
 	superblock.inode_bitmap[inode_index] = 0;
 
-	// we have to change dentries logic so as to remove
-	// the entry from the parent directory in an easy way
 	int error;
 	inode_t *parent = get_parent(path, &error);
 

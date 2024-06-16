@@ -354,7 +354,7 @@ fisopfs_truncate(const char *path, off_t size)
 	if (size == 0) {
 		free(file->content);
 		file->content = calloc(INITIAL_CONTENT_LENGTH, sizeof(char));
-		file->size = 0;
+		file->size = INITIAL_CONTENT_LENGTH;
 		file->last_modification = time(NULL);
 		return 0;
 	}
@@ -367,9 +367,7 @@ fisopfs_truncate(const char *path, off_t size)
 		return -ENOMEM;
 	}
 
-	if (content_length < size) {
-		memset(file->content + content_length, 0, size - content_length);
-	} else {
+	if (content_length > size) {
 		file->content[size] = '\0';
 	}
 	file->last_modification = time(NULL);
