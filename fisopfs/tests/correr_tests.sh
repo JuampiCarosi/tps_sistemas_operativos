@@ -12,8 +12,8 @@ tests=(
     "tests/creacion_directorios.sh"
     "tests/borrado_directorios.sh"
     "tests/persistencia_stats.sh"
-    "tests/acceso_cambia_stats.sh"
     "tests/edicion_cambia_stats.sh"
+    "tests/archivo_muy_largo.sh"
 )
 
 passed=0

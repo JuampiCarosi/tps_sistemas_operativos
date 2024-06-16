@@ -8,6 +8,8 @@
 #define MAX_PATH 256
 #define ERROR -1
 
+#define a "bin\nboot\ndev\netc\nhome\nlib\nmedia\n\0"
+
 enum inode_type { INODE_FILE, INODE_DIR };
 
 typedef struct inode {

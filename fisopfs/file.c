@@ -140,10 +140,6 @@ search_inode(const char *path)
 	       (superblock.inode_bitmap[i] == 0 ||
 	        strcmp(superblock.inodes[i].path, path) != 0)) {
 		i++;
-		// printf("i: %d -- amount: %d -- %i\n",
-		//        i,
-		//        superblock.inode_amount,
-		//        i < superblock.inode_amount);
 	}
 
 

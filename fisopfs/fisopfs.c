@@ -335,7 +335,6 @@ fisopfs_truncate(const char *path, off_t size)
 
 	int inode_index = search_inode(path);
 
-	printf("inode_index: %d\n", inode_index);
 
 	if (inode_index == ERROR) {
 		errno = ENOENT;
