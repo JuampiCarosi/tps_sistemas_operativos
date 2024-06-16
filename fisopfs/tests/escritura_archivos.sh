@@ -1,4 +1,7 @@
 #!/bin/bash
+VERDE="\e[0;32m"
+ROJO="\e[0;31m"
+RESET="\e[0m"
 
 cd prueba
 
