@@ -3,8 +3,8 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <time.h>
-#define INITIAL_CONTENT 1024
-#define MAX_INODES 100
+#define INITIAL_CONTENT_LENGTH 1024
+#define INITIAL_INODES_AMOUNT 1024
 #define MAX_PATH 256
 #define ERROR -1
 
@@ -24,9 +24,9 @@ typedef struct inode {
 } inode_t;
 
 typedef struct superblock {
-	inode_t inodes[MAX_INODES];
+	inode_t *inodes;
+	int *inode_bitmap;
 	int inode_amount;
-	int inode_bitmap[MAX_INODES];
 } superblock_t;
 
 extern superblock_t superblock;

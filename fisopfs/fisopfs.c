@@ -253,6 +253,9 @@ fisopfs_destroy(void *userdata)
 
 	serialize(fp);
 	close(fp);
+
+	free(superblock.inodes);
+	free(superblock.inode_bitmap);
 }
 
 static int
@@ -314,8 +317,8 @@ fisopfs_write(const char *path,
 	size = size > 0 ? size : 0;
 
 	if (offset + size > file->size) {
-		file->content =
-		        realloc(file->content, offset + size + INITIAL_CONTENT);
+		file->content = realloc(file->content,
+		                        offset + size + INITIAL_CONTENT_LENGTH);
 	}
 
 	memcpy(file->content + offset, buffer, size);
@@ -349,7 +352,7 @@ fisopfs_truncate(const char *path, off_t size)
 
 	if (size == 0) {
 		free(file->content);
-		file->content = calloc(INITIAL_CONTENT, sizeof(char));
+		file->content = calloc(INITIAL_CONTENT_LENGTH, sizeof(char));
 		file->size = 0;
 		file->last_modification = time(NULL);
 		return 0;

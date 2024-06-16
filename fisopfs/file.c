@@ -6,6 +6,18 @@
 #include <stdbool.h>
 #include <errno.h>
 
+void *
+recalloc(void *ptr, size_t old_size, size_t new_count, size_t new_size)
+{
+	void *new_ptr = calloc(new_count, new_size);
+	if (new_ptr == NULL) {
+		return NULL;
+	}
+	memcpy(new_ptr, ptr, old_size);
+	free(ptr);
+	return new_ptr;
+}
+
 void
 deserialize(int fp)
 {
@@ -13,6 +25,12 @@ deserialize(int fp)
 	bool error = false;
 	int inodes_amount = 0;
 	read(fp, &inodes_amount, sizeof(int));
+
+	superblock.inodes = calloc(inodes_amount, sizeof(inode_t));
+	superblock.inode_bitmap = calloc(inodes_amount, sizeof(int));
+	superblock.inode_amount = inodes_amount;
+
+
 	while (i < inodes_amount) {
 		inode_t *inode = &superblock.inodes[i];
 
@@ -22,11 +40,13 @@ deserialize(int fp)
 			break;
 		}
 
-		inode->content = malloc(sizeof(char) * inode->size);
+
+		inode->content = calloc(inode->size, sizeof(char));
 		if (inode->content == NULL) {
 			error = true;
 			break;
 		}
+
 		superblock.inode_bitmap[i] = 1;
 		i++;
 
@@ -39,19 +59,28 @@ deserialize(int fp)
 
 	if (error) {
 		perror("Error loading filesystem\n");
-		for (int j = 0; j < MAX_INODES; j++) {
+		for (int j = 0; j < i; j++) {
 			free(superblock.inodes[j].content);
 		}
-		return;
+		free(superblock.inodes);
+		free(superblock.inode_bitmap);
+		superblock.inodes = NULL;
+		superblock.inode_bitmap = NULL;
+		superblock.inode_amount = 0;
 	}
-	superblock.inode_amount = inodes_amount;
 }
 
 void
 serialize(int fp)
 {
-	write(fp, &superblock.inode_amount, sizeof(int));
-	for (int i = 0; i < MAX_INODES; i++) {
+	int inodes_amount = 0;
+	for (int i = 0; i < superblock.inode_amount; i++) {
+		if (superblock.inode_bitmap[i] == 1) {
+			inodes_amount++;
+		}
+	}
+	write(fp, &inodes_amount, sizeof(int));
+	for (int i = 0; i < superblock.inode_amount; i++) {
 		inode_t *inode = &superblock.inodes[i];
 		if (superblock.inode_bitmap[i] != 1)
 			continue;
@@ -107,13 +136,18 @@ int
 search_inode(const char *path)
 {
 	int i = 0;
-	while (i < MAX_INODES && (strcmp(superblock.inodes[i].path, path) != 0 ||
-	                          superblock.inode_bitmap[i] == 0)) {
+	while (i < superblock.inode_amount &&
+	       (superblock.inode_bitmap[i] == 0 ||
+	        strcmp(superblock.inodes[i].path, path) != 0)) {
 		i++;
+		// printf("i: %d -- amount: %d -- %i\n",
+		//        i,
+		//        superblock.inode_amount,
+		//        i < superblock.inode_amount);
 	}
 
 
-	if (i == MAX_INODES) {
+	if (i == superblock.inode_amount) {
 		return ERROR;
 	}
 
@@ -124,7 +158,7 @@ int
 search_next_free_inode()
 {
 	int i = 0;
-	while (i < MAX_INODES && superblock.inode_bitmap[i] != 0) {
+	while (i < superblock.inode_amount && superblock.inode_bitmap[i] != 0) {
 		i++;
 	}
 	return i;
@@ -165,14 +199,14 @@ add_dentry_to_content(char **content, int *content_size, char *dentry)
 	int content_length = strlen(*content);
 
 	if (content_length + dentry_size > *content_size) {
-		*content =
-		        realloc(*content,
-		                content_length + dentry_size + INITIAL_CONTENT);
+		*content = realloc(*content,
+		                   content_length + dentry_size +
+		                           INITIAL_CONTENT_LENGTH);
 		if (content == NULL) {
 			errno = ENOMEM;
 			return;
 		}
-		*content_size += dentry_size + INITIAL_CONTENT;
+		*content_size += dentry_size + INITIAL_CONTENT_LENGTH;
 	}
 
 	strcpy(*content + content_length, dentry);
@@ -249,19 +283,41 @@ create_inode(const char *path, mode_t mode, enum inode_type type)
 
 	int free_index = search_next_free_inode();
 
-	if (free_index == MAX_INODES) {
-		return -ENOSPC;
+	if (free_index == superblock.inode_amount) {
+		void *new_inodes =
+		        recalloc(superblock.inodes,
+		                 superblock.inode_amount * sizeof(inode_t),
+		                 superblock.inode_amount + INITIAL_INODES_AMOUNT,
+		                 sizeof(inode_t));
+
+		if (new_inodes == NULL) {
+			return -ENOMEM;
+		}
+
+		superblock.inodes = new_inodes;
+
+		void *new_inode_bitmap =
+		        recalloc(superblock.inode_bitmap,
+		                 superblock.inode_amount * sizeof(int),
+		                 superblock.inode_amount + INITIAL_INODES_AMOUNT,
+		                 sizeof(int));
+		if (new_inode_bitmap == NULL) {
+			return -ENOMEM;
+		}
+
+		superblock.inode_bitmap = new_inode_bitmap;
+		superblock.inode_amount += INITIAL_INODES_AMOUNT;
 	}
 
 	inode_t *inode = &superblock.inodes[free_index];
 	strcpy(inode->path, path);
-	inode->content = calloc(INITIAL_CONTENT, sizeof(char));
+	inode->content = calloc(INITIAL_CONTENT_LENGTH, sizeof(char));
 	if (inode->content == NULL) {
 		return -ENOMEM;
 	}
 	inode->content[0] = '\0';
 	inode->type = type;
-	inode->size = INITIAL_CONTENT;
+	inode->size = INITIAL_CONTENT_LENGTH;
 	inode->last_access = time(NULL);
 	inode->last_modification = time(NULL);
 	inode->creation_time = time(NULL);
@@ -270,6 +326,5 @@ create_inode(const char *path, mode_t mode, enum inode_type type)
 	inode->permissions = mode;
 
 	superblock.inode_bitmap[free_index] = 1;
-	superblock.inode_amount++;
 	return free_index;
 }
