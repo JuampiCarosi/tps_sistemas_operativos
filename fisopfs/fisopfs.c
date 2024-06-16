@@ -84,8 +84,12 @@ fisopfs_readdir(const char *path,
 
 	inode_t inode = superblock.inodes[inode_index];
 
+	if (!inode.content) {
+		return 0;
+	}
+
 	while (offset < superblock.inodes[inode_index].size) {
-		char buff[MAX_CONTENT];
+		char buff[1024];
 		get_next_entry(inode.content, &offset, buff);
 
 		filler(buffer, buff, NULL, 0);
@@ -101,7 +105,7 @@ fisopfs_read(const char *path,
              off_t offset,
              struct fuse_file_info *fi)
 {
-	printf("[debug] fisopfs_read - path: %s, offset: %lu, size: %lu\n",
+	printf("[debug] fisopfs_read - path: %s, offset: %li, size: %lu\n",
 	       path,
 	       offset,
 	       size);
@@ -119,6 +123,10 @@ fisopfs_read(const char *path,
 	}
 
 	inode_t *file = &superblock.inodes[inode_index];
+
+	if (file->content == NULL) {
+		return 0;
+	}
 
 	if (offset + size > file->size)
 		size = file->size - offset;
@@ -225,11 +233,13 @@ fisopfs_init(struct fuse_conn_info *conn)
 	if (fp < 0) {
 		format_fs();
 		fp = open(FS_PATH, O_WRONLY | O_CREAT, 0644);
+		printf("[debug] Filesystem created\n");
 	} else {
 		deserialize(fp);
+		printf("[debug] Filesystem loaded\n");
+		close(fp);
 	}
 
-	close(fp);
 	return 0;
 }
 
@@ -285,7 +295,7 @@ fisopfs_write(const char *path,
               off_t offset,
               struct fuse_file_info *fi)
 {
-	printf("[debug] fisopfs_write - path: %s, offset: %lu, size: %lu\n",
+	printf("[debug] fisopfs_write - path: %s, offset: %li, size: %lu\n",
 	       path,
 	       offset,
 	       size);
@@ -304,10 +314,16 @@ fisopfs_write(const char *path,
 
 	inode_t *file = &superblock.inodes[inode_index];
 
-	if (offset + size > MAX_CONTENT)
-		size = MAX_CONTENT - offset;
-
 	size = size > 0 ? size : 0;
+
+	if (file->content == NULL) {
+		file->content = calloc(size + offset, 1);
+		file->size = size + offset;
+	}
+
+	if (offset + size > file->size) {
+		file->content = realloc(file->content, offset + size);
+	}
 
 	memcpy(file->content + offset, buffer, size);
 	file->size = offset + size;
@@ -319,7 +335,7 @@ fisopfs_write(const char *path,
 static int
 fisopfs_truncate(const char *path, off_t size)
 {
-	printf("[debug] fisopfs_truncate - path: %s, size: %lu\n", path, size);
+	printf("[debug] fisopfs_truncate - path: %s, size: %li\n", path, size);
 
 	int inode_index = search_inode(path);
 
@@ -335,8 +351,6 @@ fisopfs_truncate(const char *path, off_t size)
 
 	inode_t *file = &superblock.inodes[inode_index];
 
-	if (size > MAX_CONTENT)
-		size = MAX_CONTENT;
 
 	file->size = size;
 	file->last_modification = time(NULL);

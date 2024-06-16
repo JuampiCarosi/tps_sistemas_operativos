@@ -3,25 +3,73 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <errno.h>
 
 void
 deserialize(int fp)
 {
-	int res = read(fp, &superblock, sizeof(superblock_t));
+	int i = 0;
+	bool error = false;
+	int inodes_amount = 0;
+	read(fp, &inodes_amount, sizeof(int));
+	while (i < inodes_amount) {
+		inode_t *inode = &superblock.inodes[i];
 
-	if (res < 0) {
-		perror("Error loading filesystem\n");
+		int read_inode = read(fp, inode, sizeof(inode_t));
+		if (read_inode <= 0) {
+			error = read_inode != 0;
+			break;
+		}
+
+		inode->content = malloc(sizeof(char) * inode->size);
+		if (inode->content == NULL) {
+			error = true;
+			break;
+		}
+		superblock.inode_bitmap[i] = 1;
+		i++;
+
+		int read_content = read(fp, inode->content, sizeof(inode->size));
+		if (read_content < 0) {
+			error = true;
+			break;
+		}
 	}
+
+	if (error) {
+		perror("Error loading filesystem\n");
+		for (int j = 0; j < MAX_INODES; j++) {
+			free(superblock.inodes[j].content);
+		}
+		return;
+	}
+	superblock.inode_amount = inodes_amount;
 }
 
 void
 serialize(int fp)
 {
-	int res = write(fp, &superblock, sizeof(superblock_t));
+	write(fp, &superblock.inode_amount, sizeof(int));
+	for (int i = 0; i < MAX_INODES; i++) {
+		inode_t *inode = &superblock.inodes[i];
+		if (superblock.inode_bitmap[i] != 1)
+			continue;
 
-	if (res < 0) {
-		perror("Error saving filesystem\n");
+		int write_inode = write(fp, inode, sizeof(inode_t));
+		int write_content = 0;
+		if (inode->content != NULL) {
+			write_content =
+			        write(fp, inode->content, sizeof(inode->size));
+			free(superblock.inodes[i].content);
+		}
+
+
+		if (write_inode < 0 || write_content < 0) {
+			perror("Error saving filesystem\n");
+
+			break;
+		}
 	}
 }
 
@@ -55,8 +103,8 @@ get_parent(const char path[MAX_PATH], int *error)
 void
 format_fs()
 {
-	superblock.inode_bitmap[0] = 1;
 	create_inode("/", __S_IFDIR | 0755, INODE_DIR);
+	printf("superblock amount: %d\n", superblock.inode_amount);
 }
 
 int
@@ -123,12 +171,13 @@ remove_inode(const char *path, int inode_index)
 	char *dir_entry = strrchr(path, '/');
 	dir_entry++;
 
-	char *new_content = calloc(MAX_CONTENT, sizeof(char));
+	char *new_content = malloc(sizeof(char) * parent->size);
+	strcpy(new_content, parent->content);
 	int new_size = 0;
 	off_t offset = 0;
 
 	while (offset < parent->size) {
-		char buff[MAX_CONTENT];
+		char buff[parent->size];
 		get_next_entry(parent->content, &offset, buff);
 
 		if (strcmp(buff, dir_entry) != 0) {
@@ -140,9 +189,9 @@ remove_inode(const char *path, int inode_index)
 		}
 	}
 
-	strcpy(parent->content, new_content);
+	// free(parent->content);
+	parent->content = new_content;
 	parent->size = new_size;
-	free(new_content);
 }
 
 int
@@ -161,11 +210,21 @@ add_dentry_to_parent_dir(const char *path)
 		errno = ENOTDIR;
 		return -ENOTDIR;
 	}
+
+
 	char *dir_entry = strrchr(path, '/');
 	dir_entry++;
 	int entry_size = strlen(dir_entry);
 	dir_entry[entry_size] = '\n';
 	dir_entry[++entry_size] = '\0';
+
+	if (!parent_inode->content) {
+		parent_inode->content = malloc(sizeof(char) * entry_size);
+		if (parent_inode->content == NULL) {
+			errno = ENOMEM;
+			return -ENOMEM;
+		}
+	}
 
 	strcpy(superblock.inodes[dir_index].content +
 	               superblock.inodes[dir_index].size,
@@ -191,7 +250,7 @@ create_inode(const char *path, mode_t mode, enum inode_type type)
 
 	inode_t *inode = &superblock.inodes[free_index];
 	strcpy(inode->path, path);
-	memset(inode->content, 0, MAX_CONTENT);
+	inode->content = NULL;
 	inode->type = type;
 	inode->size = 0;
 	inode->last_access = time(NULL);
@@ -202,6 +261,6 @@ create_inode(const char *path, mode_t mode, enum inode_type type)
 	inode->permissions = mode;
 
 	superblock.inode_bitmap[free_index] = 1;
-
+	superblock.inode_amount++;
 	return free_index;
 }

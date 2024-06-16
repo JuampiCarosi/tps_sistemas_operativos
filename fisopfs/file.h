@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <time.h>
-#define MAX_CONTENT 1024
+#define INITIAL_CONTENT 1024
 #define MAX_INODES 100
 #define MAX_PATH 256
 #define ERROR -1
@@ -12,7 +12,7 @@ enum inode_type { INODE_FILE, INODE_DIR };
 
 typedef struct inode {
 	char path[MAX_PATH];
-	char content[MAX_CONTENT];
+	char *content;
 	int size;
 	enum inode_type type;
 	time_t last_access;
@@ -25,6 +25,7 @@ typedef struct inode {
 
 typedef struct superblock {
 	inode_t inodes[MAX_INODES];
+	int inode_amount;
 	int inode_bitmap[MAX_INODES];
 } superblock_t;
 
