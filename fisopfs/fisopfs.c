@@ -33,10 +33,12 @@ fisopfs_getattr(const char *path, struct stat *st)
 
 	int inode_index = search_inode(strip_newline_character(path_copy));
 
+
 	if (inode_index == ERROR) {
 		errno = ENOENT;
 		return -ENOENT;
 	}
+
 
 	inode_t inode = superblock.inodes[inode_index];
 	st->st_nlink = 2;
@@ -75,22 +77,20 @@ fisopfs_readdir(const char *path,
 		return -ENOENT;
 	}
 
-	if (superblock.inodes[inode_index].type != INODE_DIR) {
+	inode_t inode = superblock.inodes[inode_index];
+	if (inode.type != INODE_DIR) {
 		errno = ENOTDIR;
 		return -ENOTDIR;
 	}
 
-	superblock.inodes[inode_index].last_access = time(NULL);
+	inode.last_access = time(NULL);
 
-	inode_t inode = superblock.inodes[inode_index];
-
-	if (!inode.content) {
-		return 0;
-	}
-
-	while (offset < superblock.inodes[inode_index].size) {
+	int content_length = strlen(inode.content);
+	while (offset < content_length) {
 		char buff[1024];
 		get_next_entry(inode.content, &offset, buff);
+
+		printf("[debug] fisopfs_readdir - entry: %s\n", buff);
 
 		filler(buffer, buff, NULL, 0);
 	}
@@ -123,10 +123,6 @@ fisopfs_read(const char *path,
 	}
 
 	inode_t *file = &superblock.inodes[inode_index];
-
-	if (file->content == NULL) {
-		return 0;
-	}
 
 	if (offset + size > file->size)
 		size = file->size - offset;
@@ -278,7 +274,8 @@ fisopfs_rmdir(const char *path)
 		return -ENOTDIR;
 	}
 
-	if (inode.size > 0) {
+	int content_length = strlen(inode.content);
+	if (content_length > 0) {
 		errno = ENOTEMPTY;
 		return -ENOTEMPTY;
 	}
@@ -316,13 +313,9 @@ fisopfs_write(const char *path,
 
 	size = size > 0 ? size : 0;
 
-	if (file->content == NULL) {
-		file->content = calloc(size + offset, 1);
-		file->size = size + offset;
-	}
-
 	if (offset + size > file->size) {
-		file->content = realloc(file->content, offset + size);
+		file->content =
+		        realloc(file->content, offset + size + INITIAL_CONTENT);
 	}
 
 	memcpy(file->content + offset, buffer, size);
@@ -339,6 +332,8 @@ fisopfs_truncate(const char *path, off_t size)
 
 	int inode_index = search_inode(path);
 
+	printf("inode_index: %d\n", inode_index);
+
 	if (inode_index == ERROR) {
 		errno = ENOENT;
 		return -ENOENT;
@@ -352,7 +347,27 @@ fisopfs_truncate(const char *path, off_t size)
 	inode_t *file = &superblock.inodes[inode_index];
 
 
+	if (size == 0) {
+		free(file->content);
+		file->content = calloc(INITIAL_CONTENT, sizeof(char));
+		file->size = 0;
+		file->last_modification = time(NULL);
+		return 0;
+	}
+
+	int content_length = strlen(file->content) + 1;
 	file->size = size;
+	file->content = realloc(file->content, size);
+	if (file->content == NULL) {
+		errno = ENOMEM;
+		return -ENOMEM;
+	}
+
+	if (content_length < size) {
+		memset(file->content + content_length, 0, size - content_length);
+	} else {
+		file->content[size] = '\0';
+	}
 	file->last_modification = time(NULL);
 
 	return 0;

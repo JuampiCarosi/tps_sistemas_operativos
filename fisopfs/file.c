@@ -57,12 +57,9 @@ serialize(int fp)
 			continue;
 
 		int write_inode = write(fp, inode, sizeof(inode_t));
-		int write_content = 0;
-		if (inode->content != NULL) {
-			write_content =
-			        write(fp, inode->content, sizeof(inode->size));
-			free(superblock.inodes[i].content);
-		}
+		int write_content =
+		        write(fp, inode->content, sizeof(inode->size));
+		free(superblock.inodes[i].content);
 
 
 		if (write_inode < 0 || write_content < 0) {
@@ -104,7 +101,6 @@ void
 format_fs()
 {
 	create_inode("/", __S_IFDIR | 0755, INODE_DIR);
-	printf("superblock amount: %d\n", superblock.inode_amount);
 }
 
 int
@@ -115,6 +111,7 @@ search_inode(const char *path)
 	                          superblock.inode_bitmap[i] == 0)) {
 		i++;
 	}
+
 
 	if (i == MAX_INODES) {
 		return ERROR;
@@ -159,6 +156,29 @@ get_next_entry(char *content, off_t *offset, char *buff)
 }
 
 void
+add_dentry_to_content(char **content, int *content_size, char *dentry)
+{
+	int dentry_size = strlen(dentry);
+	dentry[dentry_size] = '\n';
+	dentry[++dentry_size] = '\0';
+
+	int content_length = strlen(*content);
+
+	if (content_length + dentry_size > *content_size) {
+		*content =
+		        realloc(*content,
+		                content_length + dentry_size + INITIAL_CONTENT);
+		if (content == NULL) {
+			errno = ENOMEM;
+			return;
+		}
+		*content_size += dentry_size + INITIAL_CONTENT;
+	}
+
+	strcpy(*content + content_length, dentry);
+}
+
+void
 remove_inode(const char *path, int inode_index)
 {
 	superblock.inode_bitmap[inode_index] = 0;
@@ -171,25 +191,22 @@ remove_inode(const char *path, int inode_index)
 	char *dir_entry = strrchr(path, '/');
 	dir_entry++;
 
-	char *new_content = malloc(sizeof(char) * parent->size);
-	strcpy(new_content, parent->content);
-	int new_size = 0;
-	off_t offset = 0;
+	char *new_content = calloc(parent->size, sizeof(char));
+	int new_size = parent->size;
 
-	while (offset < parent->size) {
-		char buff[parent->size];
+	off_t offset = 0;
+	int content_length = strlen(parent->content);
+	while (offset < content_length) {
+		char buff[MAX_PATH + 1];
 		get_next_entry(parent->content, &offset, buff);
 
 		if (strcmp(buff, dir_entry) != 0) {
-			int buff_entry_size = strlen(buff);
-			buff[buff_entry_size] = '\n';
-			buff[++buff_entry_size] = '\0';
-			strcpy(new_content + new_size, buff);
-			new_size += strlen(buff);
+			add_dentry_to_content(&new_content, &new_size, buff);
 		}
 	}
 
-	// free(parent->content);
+	free(parent->content);
+	free(superblock.inodes[inode_index].content);
 	parent->content = new_content;
 	parent->size = new_size;
 }
@@ -214,22 +231,10 @@ add_dentry_to_parent_dir(const char *path)
 
 	char *dir_entry = strrchr(path, '/');
 	dir_entry++;
-	int entry_size = strlen(dir_entry);
-	dir_entry[entry_size] = '\n';
-	dir_entry[++entry_size] = '\0';
 
-	if (!parent_inode->content) {
-		parent_inode->content = malloc(sizeof(char) * entry_size);
-		if (parent_inode->content == NULL) {
-			errno = ENOMEM;
-			return -ENOMEM;
-		}
-	}
-
-	strcpy(superblock.inodes[dir_index].content +
-	               superblock.inodes[dir_index].size,
-	       dir_entry);
-	superblock.inodes[dir_index].size += entry_size;
+	add_dentry_to_content(&parent_inode->content,
+	                      &parent_inode->size,
+	                      dir_entry);
 
 	free(parent_path);
 	return 0;
@@ -250,9 +255,13 @@ create_inode(const char *path, mode_t mode, enum inode_type type)
 
 	inode_t *inode = &superblock.inodes[free_index];
 	strcpy(inode->path, path);
-	inode->content = NULL;
+	inode->content = calloc(INITIAL_CONTENT, sizeof(char));
+	if (inode->content == NULL) {
+		return -ENOMEM;
+	}
+	inode->content[0] = '\0';
 	inode->type = type;
-	inode->size = 0;
+	inode->size = INITIAL_CONTENT;
 	inode->last_access = time(NULL);
 	inode->last_modification = time(NULL);
 	inode->creation_time = time(NULL);
