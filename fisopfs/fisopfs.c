@@ -227,7 +227,7 @@ fisopfs_init(struct fuse_conn_info *conn)
 	int fp = open(FS_PATH, O_RDONLY);
 
 	if (fp < 0) {
-		format_fs();
+		create_inode("/", __S_IFDIR | 0755, INODE_DIR);
 		fp = open(FS_PATH, O_WRONLY | O_CREAT, 0644);
 		printf("[debug] Filesystem created\n");
 	} else {
@@ -317,8 +317,10 @@ fisopfs_write(const char *path,
 	size = size > 0 ? size : 0;
 
 	if (offset + size > file->size) {
-		file->content = realloc(file->content,
-		                        offset + size + INITIAL_CONTENT_LENGTH);
+		file->content = recalloc(file->content,
+		                         file->size,
+		                         offset + size + INITIAL_CONTENT_LENGTH,
+		                         sizeof(char));
 	}
 
 	memcpy(file->content + offset, buffer, size);
@@ -359,7 +361,7 @@ fisopfs_truncate(const char *path, off_t size)
 
 	int content_length = strlen(file->content) + 1;
 	file->size = size;
-	file->content = realloc(file->content, size);
+	file->content = recalloc(file->content, file->size, size, sizeof(char));
 	if (file->content == NULL) {
 		errno = ENOMEM;
 		return -ENOMEM;

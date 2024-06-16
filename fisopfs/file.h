@@ -35,7 +35,6 @@ extern superblock_t superblock;
 
 void deserialize(int fp);
 void serialize(int fp);
-void format_fs();
 int search_inode(const char *path);
 char *get_parent_path(const char path[MAX_PATH]);
 int search_next_free_inode();
@@ -44,5 +43,6 @@ int add_dentry_to_parent_dir(const char *path);
 void remove_inode(const char *path, int node_index);
 void get_next_entry(char *content, off_t *offset, char *buff);
 int read_line(const char *content, char *buffer, off_t offset);
+void *recalloc(void *ptr, size_t old_size, size_t new_count, size_t new_size);
 
 #endif  // _FILE_H_

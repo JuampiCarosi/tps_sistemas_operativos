@@ -126,11 +126,6 @@ get_parent(const char path[MAX_PATH], int *error)
 	return &superblock.inodes[parent_index];
 }
 
-void
-format_fs()
-{
-	create_inode("/", __S_IFDIR | 0755, INODE_DIR);
-}
 
 int
 search_inode(const char *path)
@@ -195,14 +190,17 @@ add_dentry_to_content(char **content, int *content_size, char *dentry)
 	int content_length = strlen(*content);
 
 	if (content_length + dentry_size > *content_size) {
-		*content = realloc(*content,
-		                   content_length + dentry_size +
-		                           INITIAL_CONTENT_LENGTH);
+		int new_size =
+		        *content_size + dentry_size + INITIAL_CONTENT_LENGTH;
+		*content = recalloc(*content,
+		                    content_length * sizeof(char),
+		                    new_size,
+		                    sizeof(char));
 		if (content == NULL) {
 			errno = ENOMEM;
 			return;
 		}
-		*content_size += dentry_size + INITIAL_CONTENT_LENGTH;
+		*content_size = new_size;
 	}
 
 	strcpy(*content + content_length, dentry);
