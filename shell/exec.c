@@ -64,6 +64,16 @@ set_environ_vars(char **eargv, int eargc)
 	}
 }
 
+static int
+check_syscall(int syscall_result, char *message)
+{
+	if (syscall_result < 0) {
+		perror_debug(message);
+		exit(-1);
+	}
+	return syscall_result;
+}
+
 // opens the file in which the stdin/stdout/stderr
 // flow will be redirected, and returns
 // the file descriptor
@@ -82,28 +92,13 @@ open_redir_fd(char *file, int flags)
 		extra_flags = S_IWUSR | S_IRUSR;
 	}
 
-	int fd = open(file, flags, extra_flags);
-
-	if (fd < 0) {
-		printf_debug("Error opening file %s\n", file);
-		exit(-1);
-	}
+	int fd = check_syscall(open(file, flags, extra_flags),
+	                       "Error opening file\n");
 
 	return fd;
 }
 
-int
-check_syscall(int syscall_result, char *message)
-{
-	if (syscall_result < 0) {
-		perror_debug(message);
-		exit(-1);
-	}
-	return syscall_result;
-}
-
-
-void
+static void
 redirect_stdin(char *in_file)
 {
 	if (strlen(in_file) > 0) {
@@ -111,17 +106,13 @@ redirect_stdin(char *in_file)
 
 		int result = dup2(in_fd, STDIN_FILENO);
 
-		if (result < 0) {
-			printf_debug("Error redirecting stdin\n");
-			close(in_fd);
-			exit(-1);
-		}
-
 		close(in_fd);
+
+		check_syscall(result, "Error redirecting stdin\n");
 	}
 }
 
-void
+static void
 redirect_stdout(char *out_file)
 {
 	if (strlen(out_file) > 0) {
@@ -137,7 +128,7 @@ redirect_stdout(char *out_file)
 	}
 }
 
-void
+static void
 redirect_stderr(char *err_file)
 {
 	if (strlen(err_file) > 0) {
@@ -159,7 +150,7 @@ redirect_stderr(char *err_file)
 	}
 }
 
-void
+static void
 run_exec(struct execcmd *e)
 {
 	set_environ_vars(e->eargv, e->eargc);
@@ -171,7 +162,7 @@ run_exec(struct execcmd *e)
 	check_syscall(execvp(e->argv[0], e->argv), "Error executing execvp\n");
 }
 
-void
+static void
 run_pipe(struct pipecmd *p)
 {
 	int fildes[2];

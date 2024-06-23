@@ -16,6 +16,29 @@ exit_shell(char *cmd)
 	return FALSE;
 }
 
+static bool
+is_whitespace(char c)
+{
+	return c == ' ' || c == '\t' || c == '\n';
+}
+
+static char *
+trim_whitespaces(char *str)
+{
+	while (is_whitespace(*str)) {
+		str++;
+	}
+
+	int n = strlen(str) - 1;
+
+	while (n >= 0 && is_whitespace(str[n])) {
+		n--;
+	}
+	str[n + 1] = '\0';
+
+	return str;
+}
+
 // returns true if "chdir" was performed
 //  this means that if 'cmd' contains:
 // 	1. $ cd directory (change to 'directory')
@@ -35,26 +58,39 @@ cd(char *cmd)
 		return FALSE;
 	}
 
+	cmd = trim_whitespaces(cmd);
+
+	if (strcmp("cd", cmd) == 0) {
+		char *home = getenv(HOME);
+		if (chdir(home) < 0) {
+			printf_debug("Error changing to HOME");
+			return TRUE;
+		}
+		snprintf(prompt, sizeof prompt, "(%s)", home);
+		return TRUE;
+	}
+
+	if (strncmp(cmd, "cd ", 3) != 0) {
+		return FALSE;
+	}
+
 	strtok(cmd, " ");
 	char *directory = strtok(NULL, " ");
+
+	if (*directory == '$') {
+		directory++;
+		directory = getenv(directory);
+	}
 
 	if (directory) {
 		if (chdir(directory) < 0) {
 			printf_debug("Error changing to %s\n", directory);
-			exit(1);
+			return TRUE;
 		}
 		char *buffer = getcwd(NULL, 0);
 		snprintf(prompt, sizeof prompt, "(%s)", buffer);
 		free(buffer);
-	} else {
-		char *home = getenv(HOME);
-		if (chdir(home) < 0) {
-			printf_debug("Error changing to HOME");
-			exit(1);
-		}
-		snprintf(prompt, sizeof prompt, "(%s)", home);
 	}
-
 	return TRUE;
 }
 
@@ -74,7 +110,7 @@ pwd(char *cmd)
 	char *buffer = getcwd(NULL, 0);
 	if (!buffer) {
 		printf_debug("Error getting current directory\n");
-		exit(1);
+		return TRUE;
 	}
 	printf_debug("%s\n", buffer);
 	free(buffer);

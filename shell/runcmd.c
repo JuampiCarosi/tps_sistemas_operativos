@@ -42,6 +42,10 @@ run_cmd(char *cmd)
 		if (parsed->type == PIPE)
 			parsed_pipe = parsed;
 
+		if (parsed->type != BACK)
+			setpgid(0, 0);
+
+		restore_default_signal_status(SIGCHLD);
 		exec_cmd(parsed);
 	}
 
@@ -57,7 +61,6 @@ run_cmd(char *cmd)
 	//
 	if (parsed->type == BACK) {
 		print_back_info(parsed);
-		waitpid(parsed->pid, &status, WNOHANG);
 	} else {
 		// waits for the process to finish
 		waitpid(parsed->pid, &status, 0);

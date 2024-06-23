@@ -1,3 +1,4 @@
 *.o
 sh
 tests/reflector
+.vscode

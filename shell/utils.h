@@ -11,4 +11,5 @@ int printf_debug(char *format, ...);
 int fprintf_debug(FILE *file, char *format, ...);
 int perror_debug(char *msg);
 
+void restore_default_signal_status(int signal);
 #endif  // UTILS_H
