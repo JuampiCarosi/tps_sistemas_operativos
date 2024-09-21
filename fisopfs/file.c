@@ -50,7 +50,7 @@ deserialize(int fp)
 		superblock.inode_bitmap[i] = 1;
 		i++;
 
-		int read_content = read(fp, inode->content, sizeof(inode->size));
+		int read_content = read(fp, inode->content, inode->size);
 		if (read_content < 0) {
 			error = true;
 			break;
@@ -88,7 +88,7 @@ serialize(int fp)
 
 		int write_inode = write(fp, inode, sizeof(inode_t));
 		int write_content =
-		        write(fp, inode->content, sizeof(inode->size));
+		        write(fp, inode->content, inode->size);
 
 		if (write_inode < 0 || write_content < 0) {
 			perror("Error saving filesystem\n");
